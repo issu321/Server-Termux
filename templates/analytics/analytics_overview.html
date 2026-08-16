@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Analytics Overview{% endblock %}
+{% block page_title %}Business Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ─── Animated Progress Bars ─── */
+.util-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 180px;
+}
+
+.util-track {
+    flex: 1;
+    height: 10px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.util-fill {
+    height: 100%;
+    border-radius: 5px;
+    width: 0;
+    animation: growBar 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.util-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%);
+    animation: shimmer 2s infinite;
+}
+
+.util-fill-green {
+    background: linear-gradient(90deg, #059669, #10B981);
+    box-shadow: 0 0 10px rgba(16,185,129,0.25);
+}
+
+.util-fill-yellow {
+    background: linear-gradient(90deg, #D97706, #F59E0B);
+    box-shadow: 0 0 10px rgba(245,158,11,0.25);
+}
+
+.util-fill-red {
+    background: linear-gradient(90deg, #DC2626, #EF4444);
+    box-shadow: 0 0 10px rgba(239,68,68,0.25);
+}
+
+.util-percent {
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 36px;
+    text-align: right;
+}
+
+.util-percent-green { color: #10B981; }
+.util-percent-yellow { color: #F59E0B; }
+.util-percent-red { color: #EF4444; }
+
+@keyframes growBar {
+    from { width: 0; }
+    to { width: var(--target-width); }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* ─── Table Row Hover Enhancement ─── */
+.table-glass tbody tr {
+    transition: background 0.2s ease;
+}
+
+.table-glass tbody tr:hover {
+    background: rgba(255,255,255,0.025);
+}
+
+/* ─── Status Dot ─── */
+.dept-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 6px currentColor;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid mb-4">
+    <div class="glass-card glass-card-primary p-4">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-coins" style="color: var(--accent-primary); font-size: 24px;"></i>
+            <div>
+                <small style="color: var(--text-secondary);">30d Revenue</small>
+                <div style="font-size: 22px; font-weight: 700;">{{ currency_symbol }}{{ "{:,.0f}".format(summary.revenue_30d) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card glass-card-success p-4">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-chart-line" style="color: #10B981; font-size: 24px;"></i>
+            <div>
+                <small style="color: var(--text-secondary);">30d Profit</small>
+                <div style="font-size: 22px; font-weight: 700;">{{ currency_symbol }}{{ "{:,.0f}".format(summary.profit_30d) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card glass-card-warning p-4">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-percentage" style="color: #F59E0B; font-size: 24px;"></i>
+            <div>
+                <small style="color: var(--text-secondary);">Margin</small>
+                <div style="font-size: 22px; font-weight: 700;">{{ "%.1f"|format(summary.margin) }}%</div>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card p-4">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-users" style="color: #8B5CF6; font-size: 24px;"></i>
+            <div>
+                <small style="color: var(--text-secondary);">Customers</small>
+                <div style="font-size: 22px; font-weight: 700;">{{ summary.total_customers }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="glass-card p-4" style="height: 400px;">
+            <h5 class="mb-3" style="font-weight: 600;">Revenue Trend</h5>
+            <div id="trendChart" style="width: 100%; height: 330px;"></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="glass-card p-4" style="height: 400px;">
+            <h5 class="mb-3" style="font-weight: 600;">Department Budget</h5>
+            <div id="deptChart" style="width: 100%; height: 330px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card p-4">
+    <h5 class="mb-3" style="font-weight: 600;">Department Performance</h5>
+    <table class="table-glass">
+        <thead>
+            <tr>
+                <th>Department</th>
+                <th class="text-end">Budget</th>
+                <th class="text-end">Spent</th>
+                <th>Utilization</th>
+                <th class="text-end">Variance</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for d in dept_perf %}
+        {% set util = d.utilization | float %}
+        {% set util_class = 'green' if util < 50 else 'yellow' if util < 80 else 'red' %}
+        <tr>
+            <td>
+                <span class="dept-dot" style="background: {{ util_class | replace('green', '#10B981') | replace('yellow', '#F59E0B') | replace('red', '#EF4444') }}; color: {{ util_class | replace('green', '#10B981') | replace('yellow', '#F59E0B') | replace('red', '#EF4444') }};"></span>
+                <span style="font-weight: 600;">{{ d.name }}</span>
+            </td>
+            <td class="text-end" style="font-variant-numeric: tabular-nums;">{{ currency_symbol }}{{ "{:,.0f}".format(d.budget) }}</td>
+            <td class="text-end" style="font-variant-numeric: tabular-nums;">{{ currency_symbol }}{{ "{:,.0f}".format(d.spent) }}</td>
+            <td>
+                <div class="util-bar-wrap">
+                    <div class="util-track">
+                        <div class="util-fill util-fill-{{ util_class }}" style="--target-width: {{ [util, 100] | min }}%;"></div>
+                    </div>
+                    <span class="util-percent util-percent-{{ util_class }}">{{ "%.0f"|format(util) }}%</span>
+                </div>
+            </td>
+            <td class="text-end" style="font-variant-numeric: tabular-nums; color: {% if d.variance >= 0 %}#10B981{% else %}#EF4444{% endif %}; font-weight: 600;">
+                {{ currency_symbol }}{{ "{:,.0f}".format(d.variance) }}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.CURRENCY_SYMBOL = "{{ currency_symbol }}";
+
+const trend = {{ trend | tojson }};
+Plotly.newPlot('trendChart', [
+    {x: trend.dates, y: trend.revenue, type: 'scatter', mode: 'lines', name: 'Revenue', line: {color: '#00D4FF', width: 2}, fill: 'tozeroy', fillcolor: 'rgba(0,212,255,0.05)'},
+    {x: trend.dates, y: trend.expenses, type: 'scatter', mode: 'lines', name: 'Expenses', line: {color: '#F472B6', width: 2}},
+    {x: trend.dates, y: trend.profit, type: 'scatter', mode: 'lines', name: 'Profit', line: {color: '#10B981', width: 2}}
+], {paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', font: {color: '#94A3B8'}, xaxis: {gridcolor: 'rgba(255,255,255,0.03)', tickfont: {size: 10}}, yaxis: {gridcolor: 'rgba(255,255,255,0.03)', tickfont: {size: 10}, tickprefix: window.CURRENCY_SYMBOL}, legend: {orientation: 'h', y: -0.15}, margin: {t: 10, r: 10, b: 40, l: 50}}, {responsive: true, displayModeBar: false});
+
+const deptPerf = {{ dept_perf | tojson }};
+Plotly.newPlot('deptChart', [{
+    values: deptPerf.map(d => d.budget), labels: deptPerf.map(d => d.name),
+    type: 'pie', hole: 0.5, marker: {colors: ['#00D4FF', '#8B5CF6', '#10B981', '#F472B6', '#F59E0B', '#3B82F6']},
+    textinfo: 'label+percent', textfont: {size: 10}
+}], {paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', font: {color: '#94A3B8'}, showlegend: false, margin: {t: 10, r: 10, b: 10, l: 10}}, {responsive: true, displayModeBar: false});
+</script>
+{% endblock %}

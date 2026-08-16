@@ -1,0 +1,24 @@
+REPORT_TYPE,Executive Summary Report
+COMPANY,Usmania-Tech-Pvt.ltd
+INDUSTRY,Technology
+GENERATED,"June 21, 2026 at 13:39 UTC"
+
+SECTION,Executive Summary
+METRIC,VALUE
+Annual Revenue,100000000.0
+Annual Costs,205500.0
+Net Profit (LTM),-205500.0
+Net Margin %,-0.2055
+Health Score,65
+Employees,15
+Customers,6
+Churn Rate %,0.0
+
+SECTION,30-Day Financial Pulse
+PERIOD,REVENUE,EXPENSES,PROFIT
+Last 30 Days,0.0,205500.0,-205500.0
+Last 90 Days,0.0,205500.0,-205500.0
+Last 12 Months,0.0,205500.0,-205500.0
+
+SECTION,Recommendations
+RECOMMENDATION,URGENT: Net margin is below 10%. Immediate cost review and pricing optimization required.

@@ -1,0 +1,4 @@
+customer_code,first_name,last_name,company_name,email,phone,address,city,country,segment,lifetime_value,acquisition_cost,total_orders,total_spent,satisfaction_score,nps_score,status
+CUST-001,John,Doe,Acme Corp,john.doe@example.com,+1-555-0101,123 Main St,New York,USA,Enterprise,50000,500,10,45000,4.5,8,active
+CUST-002,Jane,Smith,TechStart Inc,jane.smith@example.com,+1-555-0102,456 Oak Ave,San Francisco,USA,SMB,15000,200,5,12000,4.2,7,active
+CUST-003,Ahmed,Khan,Global Solutions,ahmed.khan@example.com,+91-88888-88888,789 Park Road,Bangalore,India,Enterprise,80000,800,15,75000,4.8,9,active
