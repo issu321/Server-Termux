@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ sim_label }}{% endblock %}
+{% block page_title %}{{ sim_label }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="glass-card p-4">
+            <h5 class="mb-4" style="font-weight: 600;">Hiring Parameters</h5>
+            <form method="POST" id="simForm">
+                <input type="hidden" name="name" value="{{ sim_label }} - {{ now }}">
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select class="form-control-glass" name="role">
+                        {% if real_data.roles %}
+                            {% for r in real_data.roles %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="Manager">Manager</option>
+                            <option value="Developer">Developer</option>
+                            <option value="Sales Rep">Sales Rep</option>
+                            <option value="Analyst">Analyst</option>
+                            <option value="Marketing">Marketing</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Annual Salary ({{ currency_symbol }})</label>
+                    <input type="number" class="form-control-glass" name="salary" value="{{ real_data.avg_salary|round|int if real_data.avg_salary else 75000 }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Annual Benefits ({{ currency_symbol }})</label>
+                    <input type="number" class="form-control-glass" name="benefits" value="{{ (real_data.avg_salary * 0.3)|round|int if real_data.avg_salary else 15000 }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <select class="form-control-glass" name="department">
+                        {% if real_data.departments %}
+                            {% for d in real_data.departments %}
+                            <option value="{{ d }}">{{ d }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="Sales">Sales</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Operations">Operations</option>
+                            <option value="HR">HR</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control-glass" name="start_date" value="{{ now }}">
+                </div>
+                <button type="submit" class="btn-glass w-100"><i class="fas fa-play me-2"></i>Run Simulation</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="glass-card p-4" id="resultsCard" style="display: none;"><h5 class="mb-3" style="font-weight: 600;">Results</h5><div id="resultsContent"></div></div>
+        <div class="glass-card p-4" id="placeholderCard">
+            <div class="text-center py-5"><i class="fas fa-user-plus mb-3" style="font-size: 48px; color: var(--accent-primary); opacity: 0.5;"></i><p style="color: var(--text-secondary);">Run simulation to see hiring impact</p></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<script src="{{ url_for('static', filename='js/simulation_formatter.js') }}"></script>
+<script>
+document.getElementById('simForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(window.location.pathname, {method: 'POST', body: new FormData(this), headers: {'X-Requested-With': 'XMLHttpRequest'}})
+    .then(r => r.json()).then(data => {
+        if(data.success && data.simulation) {
+            const s = data.simulation;
+            document.getElementById('placeholderCard').style.display = 'none';
+            document.getElementById('resultsCard').style.display = 'block';
+
+            const annualCost = fmtMoney(getSimValue(s, 'annual_cost'));
+            const prodGain = fmtMoney(getSimValue(s, 'productivity_gain'));
+            const roiVal = getSimValue(s, 'roi_pct');
+            const roi = fmtNum(roiVal, 1) + '%';
+            const revImpact = fmtMoney((getSimValue(s, 'revenue_after') || 0) - (getSimValue(s, 'revenue_before') || 0));
+            const profImpact = fmtMoney((getSimValue(s, 'profit_after') || 0) - (getSimValue(s, 'profit_before') || 0));
+            const revBefore = fmtMoney(getSimValue(s, 'revenue_before'));
+            const revAfter = fmtMoney(getSimValue(s, 'revenue_after'));
+            const profBefore = fmtMoney(getSimValue(s, 'profit_before'));
+            const profAfter = fmtMoney(getSimValue(s, 'profit_after'));
+            const riskScore = getSimValue(s, 'risk_score') || 0;
+            const riskColor = riskScore >= 70 ? 'badge-danger' : riskScore >= 40 ? 'badge-warning' : 'badge-success';
+            const roiColor = parseFloat(roiVal || 0) > 0 ? '#10B981' : '#EF4444';
+            const revDiff = (getSimValue(s, 'revenue_after') || 0) - (getSimValue(s, 'revenue_before') || 0);
+            const profDiff = (getSimValue(s, 'profit_after') || 0) - (getSimValue(s, 'profit_before') || 0);
+            const revColor = revDiff >= 0 ? '#10B981' : '#EF4444';
+            const profColor = profDiff >= 0 ? '#10B981' : '#EF4444';
+
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Annual Cost</small><div style="font-size: 18px; font-weight: 700;">${annualCost}</div></div></div>
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Productivity Gain</small><div style="font-size: 18px; font-weight: 700; color: #10B981;">${prodGain}</div></div></div>
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">ROI</small><div style="font-size: 18px; font-weight: 700; color: ${roiColor};">${roi}</div></div></div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Revenue Impact</small><div style="font-size: 20px; font-weight: 700; color: ${revColor};">${revImpact}</div><small style="color: var(--text-secondary);">${revBefore} → ${revAfter}</small></div></div>
+                    <div class="col-md-6"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Profit Impact</small><div style="font-size: 20px; font-weight: 700; color: ${profColor};">${profImpact}</div><small style="color: var(--text-secondary);">${profBefore} → ${profAfter}</small></div></div>
+                </div>
+                <div class="mb-3"><span style="color: var(--text-secondary);">Risk Score:</span> <span class="badge-glass ${riskColor}">${fmtNum(riskScore, 0)}</span></div>
+                <div class="p-3 mb-3" style="background: rgba(255,255,255,0.02); border-radius: 8px;"><small style="color: var(--text-secondary); display: block; margin-bottom: 4px;">Analysis</small><p style="color: var(--text-primary); font-size: 13px; margin: 0;">${s.recommendations || ''}</p></div>
+                <a href="/simulation/" class="btn btn-outline-glass">Back to Center</a>
+            `;
+        }
+    });
+});
+</script>
+{% endblock %}

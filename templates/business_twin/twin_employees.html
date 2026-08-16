@@ -1,0 +1,717 @@
+{% extends "base.html" %}
+{% block title %}Employee Twin{% endblock %}
+{% block page_title %}Employee Twin{% endblock %}
+{% block content %}
+
+<!-- Employee Stats Cards -->
+<div class="stats-grid mb-4">
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: var(--accent-primary);">
+            {{ total_db_employees }}
+        </div>
+        <small style="color: var(--text-secondary);">Total Employees</small>
+    </div>
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: #10B981;">
+            {{ active_count }}
+        </div>
+        <small style="color: var(--text-secondary);">Active Employees</small>
+    </div>
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: #8B5CF6;">
+            {{ dept_count }}
+        </div>
+        <small style="color: var(--text-secondary);">Departments</small>
+    </div>
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: #F59E0B;">
+            {% if total_db_employees > 0 %}
+                {{ avg_salary | format_currency }}
+            {% else %}
+                {{ 0 | format_currency }}
+            {% endif %}
+        </div>
+        <small style="color: var(--text-secondary);">Avg Salary</small>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+    <button class="btn-glass" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+        <i class="fas fa-plus me-2"></i>Add Employee
+    </button>
+    <button class="btn-glass" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+        <i class="fas fa-upload me-2"></i>Import CSV
+    </button>
+    <button class="btn-glass" style="background: linear-gradient(135deg, #10B981, #059669);" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+        <i class="fas fa-file-excel me-2"></i>Import Excel
+    </button>
+    <a href="{{ url_for('business_twin.download_employee_csv_template') }}" class="btn btn-outline-glass">
+        <i class="fas fa-download me-2"></i>CSV Template
+    </a>
+    <a href="{{ url_for('business_twin.download_employee_excel_template') }}" class="btn btn-outline-glass">
+        <i class="fas fa-file-excel me-2"></i>Excel Template
+    </a>
+    <a href="{{ url_for('business_twin.export_employees_excel') }}" class="btn btn-outline-glass">
+        <i class="fas fa-file-excel me-2"></i>Export Excel
+    </a>
+    <a href="{{ url_for('business_twin.export_employees_pdf') }}" class="btn btn-outline-glass">
+        <i class="fas fa-file-pdf me-2"></i>Export PDF
+    </a>
+    {% if total_db_employees > 0 %}
+    <button class="btn-glass" style="background: linear-gradient(135deg, #EF4444, #DC2626);" onclick="deleteAllEmployees()">
+        <i class="fas fa-trash-alt me-2"></i>Delete All Records
+    </button>
+    {% endif %}
+</div>
+
+<!-- Employee Database Table -->
+<div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 600;">Employee Directory</h5>
+        <span class="badge-glass badge-info">
+            {{ total_db_employees }} employees
+        </span>
+    </div>
+
+    {% if total_db_employees == 0 %}
+    <div class="text-center py-5">
+        <i class="fas fa-users" style="font-size: 48px; color: var(--text-secondary); opacity: 0.3;"></i>
+        <p class="mt-3" style="color: var(--text-secondary);">No employee records in database yet.</p>
+        <p style="color: var(--text-secondary);">Your company has approximately <strong>{{ company.employee_count if company and company.employee_count else 0 }}</strong> employees.</p>
+        <div class="mt-3">
+            <button class="btn-glass me-2" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <i class="fas fa-plus me-2"></i>Add First Employee
+            </button>
+            <button class="btn btn-outline-glass me-2" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+                <i class="fas fa-upload me-2"></i>Import from CSV
+            </button>
+            <button class="btn btn-outline-glass" style="border-color: #10B981; color: #10B981;" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                <i class="fas fa-file-excel me-2"></i>Import from Excel
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table-glass">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Job Title</th>
+                    <th>Salary</th>
+                    <th>Status</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for e in employees %}
+            <tr>
+                <td><code style="color: var(--accent-primary);">{{ e.employee_id or ('EMP-' ~ e.id) }}</code></td>
+                <td style="font-weight: 500;">{{ e.full_name() or '-' }}</td>
+                <td><small>{{ e.email or '-' }}</small></td>
+                <td><span class="badge-glass badge-info">{{ dept_map.get(e.department_id, 'Unassigned') }}</span></td>
+                <td>{{ e.job_title or '-' }}</td>
+                <td>{{ e.salary | format_currency }}</td>
+                <td>
+                    <span class="badge-glass {% if e.status == 'active' %}badge-success{% elif e.status == 'inactive' %}badge-warning{% else %}badge-danger{% endif %}">
+                        {{ e.status|title }}
+                    </span>
+                </td>
+                <td>
+                    {% if e.performance_rating %}
+                    <span class="badge-glass {% if e.performance_rating >= 4 %}badge-success{% elif e.performance_rating >= 3 %}badge-warning{% else %}badge-danger{% endif %}">
+                        {{ "%.1f"|format(e.performance_rating) }}
+                    </span>
+                    {% else %}-{% endif %}
+                </td>
+                <td style="white-space: nowrap;">
+                    <button class="btn-action btn-edit" onclick="openEditModal({{ e.id }})" title="Edit Employee">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="deleteEmployee({{ e.id }})" title="Delete Employee">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-user-plus me-2" style="color: var(--accent-primary);"></i>Add New Employee</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <form id="addEmployeeForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">First Name *</label>
+                            <input type="text" class="form-control-glass" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Last Name *</label>
+                            <input type="text" class="form-control-glass" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</label>
+                            <input type="email" class="form-control-glass" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Phone</label>
+                            <input type="text" class="form-control-glass" name="phone">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Employee ID</label>
+                            <input type="text" class="form-control-glass" name="employee_id" placeholder="Auto-generated if empty">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Job Title</label>
+                            <input type="text" class="form-control-glass" name="job_title">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Department *</label>
+                            <select class="form-control-glass" name="department_id" required>
+                                <option value="">Select Department...</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if not departments %}
+                            <small style="color: #F59E0B; font-size: 0.7rem;">No departments found. <a href="{{ url_for('business_twin.departments') }}">Create one first</a>.</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Employment Type</label>
+                            <select class="form-control-glass" name="employment_type">
+                                <option value="full_time">Full Time</option>
+                                <option value="part_time">Part Time</option>
+                                <option value="contract">Contract</option>
+                                <option value="intern">Intern</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Annual Salary</label>
+                            <input type="number" class="form-control-glass" name="salary" value="0" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Benefits Cost</label>
+                            <input type="number" class="form-control-glass" name="benefits_cost" value="0" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Hire Date</label>
+                            <input type="date" class="form-control-glass" name="hire_date">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                            <select class="form-control-glass" name="status">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="terminated">Terminated</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Performance Rating (0-5)</label>
+                            <input type="number" class="form-control-glass" name="performance_rating" min="0" max="5" step="0.1">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitEmployee()">
+                    <i class="fas fa-save me-2"></i>Save Employee
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Employee Modal -->
+<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-user-edit me-2" style="color: var(--accent-primary);"></i>Edit Employee</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <form id="editEmployeeForm">
+                    <input type="hidden" name="id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">First Name *</label>
+                            <input type="text" class="form-control-glass" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Last Name *</label>
+                            <input type="text" class="form-control-glass" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</label>
+                            <input type="email" class="form-control-glass" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Phone</label>
+                            <input type="text" class="form-control-glass" name="phone">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Employee ID</label>
+                            <input type="text" class="form-control-glass" name="employee_id">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Job Title</label>
+                            <input type="text" class="form-control-glass" name="job_title">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Department *</label>
+                            <select class="form-control-glass" name="department_id" required>
+                                <option value="">Select Department...</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Employment Type</label>
+                            <select class="form-control-glass" name="employment_type">
+                                <option value="full_time">Full Time</option>
+                                <option value="part_time">Part Time</option>
+                                <option value="contract">Contract</option>
+                                <option value="intern">Intern</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Annual Salary</label>
+                            <input type="number" class="form-control-glass" name="salary" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Benefits Cost</label>
+                            <input type="number" class="form-control-glass" name="benefits_cost" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Hire Date</label>
+                            <input type="date" class="form-control-glass" name="hire_date">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                            <select class="form-control-glass" name="status">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="terminated">Terminated</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Performance Rating (0-5)</label>
+                            <input type="number" class="form-control-glass" name="performance_rating" min="0" max="5" step="0.1">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitEditEmployee()">
+                    <i class="fas fa-save me-2"></i>Update Employee
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import CSV Modal -->
+<div class="modal fade" id="importCsvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-file-csv me-2" style="color: #10B981;"></i>Import Employees from CSV</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div class="alert alert-info mb-3" style="background: rgba(0,212,255,0.05); border: 1px solid var(--accent-primary); color: var(--text-primary); border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Required columns:</strong> first_name, last_name<br>
+                    <strong>Optional:</strong> employee_id, email, phone, job_title, department, employment_type, salary, benefits_cost, hire_date, status, performance_rating<br>
+                    <em style="color: var(--text-secondary);">Duplicate emails will update existing records instead of creating duplicates.</em><br>
+                    <a href="{{ url_for('business_twin.download_employee_csv_template') }}" style="color: var(--accent-primary);"><i class="fas fa-download me-1"></i>Download CSV template</a>
+                </div>
+                <form id="importCsvForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Select CSV File</label>
+                        <input type="file" class="form-control-glass" name="csv_file" accept=".csv" required>
+                    </div>
+                </form>
+                <div id="importResult" style="display: none;"></div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitCsvImport()">
+                    <i class="fas fa-upload me-2"></i>Import
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Excel Modal -->
+<div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-file-excel me-2" style="color: #10B981;"></i>Import Employees from Excel</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div class="alert alert-info mb-3" style="background: rgba(16,185,129,0.05); border: 1px solid #10B981; color: var(--text-primary); border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-info-circle me-2" style="color: #10B981;"></i>
+                    <strong>Required columns:</strong> first_name, last_name<br>
+                    <strong>Optional:</strong> employee_id, email, phone, job_title, department, employment_type, salary, benefits_cost, hire_date, status, performance_rating<br>
+                    <strong>Supported:</strong> .xlsx and .xls files<br>
+                    <em style="color: var(--text-secondary);">Duplicate emails will update existing records instead of creating duplicates.</em><br>
+                    <a href="{{ url_for('business_twin.download_employee_excel_template') }}" style="color: #10B981;"><i class="fas fa-download me-1"></i>Download Excel template</a>
+                </div>
+                <form id="importExcelForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Select Excel File (.xlsx)</label>
+                        <input type="file" class="form-control-glass" name="excel_file" accept=".xlsx,.xls" required>
+                    </div>
+                </form>
+                <div id="importExcelResult" style="display: none;"></div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" style="background: linear-gradient(135deg, #10B981, #059669);" onclick="submitExcelImport()">
+                    <i class="fas fa-upload me-2"></i>Import Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const employeeData = {
+{% for e in employees %}
+    {{ e.id }}: {
+        id: {{ e.id }},
+        employee_id: {{ e.employee_id|tojson }},
+        first_name: {{ e.first_name|tojson }},
+        last_name: {{ e.last_name|tojson }},
+        email: {{ e.email|tojson }},
+        phone: {{ e.phone|tojson }},
+        department_id: {{ e.department_id if e.department_id is not none else 'null' }},
+        job_title: {{ e.job_title|tojson }},
+        employment_type: {{ e.employment_type|tojson }},
+        salary: {{ e.salary or 0 }},
+        benefits_cost: {{ e.benefits_cost or 0 }},
+        hire_date: {{ e.hire_date.strftime('%Y-%m-%d')|tojson if e.hire_date else 'null' }},
+        status: {{ e.status|tojson }},
+        performance_rating: {{ e.performance_rating if e.performance_rating is not none else 'null' }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+function submitEmployee() {
+    const form = document.getElementById('addEmployeeForm');
+    const formData = new FormData(form);
+
+    fetch('{{ url_for("business_twin.add_employee") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Employee added successfully!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
+            modal.hide();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error adding employee', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function openEditModal(id) {
+    const data = employeeData[id];
+    if (!data) {
+        showToast('Employee data not found', 'error');
+        return;
+    }
+    const form = document.getElementById('editEmployeeForm');
+    form.querySelector('[name="id"]').value = data.id;
+    form.querySelector('[name="employee_id"]').value = data.employee_id || '';
+    form.querySelector('[name="first_name"]').value = data.first_name || '';
+    form.querySelector('[name="last_name"]').value = data.last_name || '';
+    form.querySelector('[name="email"]').value = data.email || '';
+    form.querySelector('[name="phone"]').value = data.phone || '';
+    form.querySelector('[name="job_title"]').value = data.job_title || '';
+    form.querySelector('[name="department_id"]').value = data.department_id || '';
+    form.querySelector('[name="employment_type"]').value = data.employment_type || 'full_time';
+    form.querySelector('[name="salary"]').value = data.salary || 0;
+    form.querySelector('[name="benefits_cost"]').value = data.benefits_cost || 0;
+    form.querySelector('[name="hire_date"]').value = data.hire_date !== null ? data.hire_date : '';
+    form.querySelector('[name="status"]').value = data.status || 'active';
+    form.querySelector('[name="performance_rating"]').value = data.performance_rating !== null ? data.performance_rating : '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+    modal.show();
+}
+
+function submitEditEmployee() {
+    const form = document.getElementById('editEmployeeForm');
+    const formData = new FormData(form);
+    const employeeId = formData.get('id');
+    
+    const url = `{{ url_for("business_twin.edit_employee", employee_id=0) }}`.replace(/\/0$/, '/' + employeeId);
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Employee updated successfully!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+            if (modal) modal.hide();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error updating employee', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function deleteEmployee(id) {
+    if (!confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
+        return;
+    }
+    
+    const url = `{{ url_for("business_twin.delete_employee", employee_id=0) }}`.replace(/\/0$/, '/' + id);
+    
+    fetch(url, {
+        method: 'DELETE'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Employee deleted successfully!', 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error deleting employee', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function deleteAllEmployees() {
+    const count = {{ total_db_employees }};
+    if (!confirm(`Are you sure you want to delete ALL ${count} employee records? This action cannot be undone.`)) {
+        return;
+    }
+    
+    fetch('{{ url_for("business_twin.delete_all_employees") }}', {
+        method: 'DELETE'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error deleting employees', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function submitCsvImport() {
+    const form = document.getElementById('importCsvForm');
+    const formData = new FormData(form);
+
+    fetch('{{ url_for("business_twin.import_employees_csv") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        const resultDiv = document.getElementById('importResult');
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success mt-3" style="background: rgba(16,185,129,0.1); border: 1px solid #10B981; color: #10B981; border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-check-circle me-2"></i>${data.message}
+                    ${data.errors.length > 0 ? '<br><small>Errors: ' + data.errors.join(', ') + '</small>' : ''}
+                </div>`;
+            resultDiv.style.display = 'block';
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger mt-3" style="background: rgba(239,68,68,0.1); border: 1px solid #EF4444; color: #EF4444; border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-exclamation-circle me-2"></i>${data.error || 'Import failed'}
+                </div>`;
+            resultDiv.style.display = 'block';
+        }
+    })
+    .catch(err => {
+        showToast('Import error: ' + err.message, 'error');
+    });
+}
+
+function submitExcelImport() {
+    const form = document.getElementById('importExcelForm');
+    const formData = new FormData(form);
+
+    fetch('{{ url_for("business_twin.import_employees_excel") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        const resultDiv = document.getElementById('importExcelResult');
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success mt-3" style="background: rgba(16,185,129,0.1); border: 1px solid #10B981; color: #10B981; border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-check-circle me-2"></i>${data.message}
+                    ${data.errors.length > 0 ? '<br><small>Errors: ' + data.errors.join(', ') + '</small>' : ''}
+                </div>`;
+            resultDiv.style.display = 'block';
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger mt-3" style="background: rgba(239,68,68,0.1); border: 1px solid #EF4444; color: #EF4444; border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-exclamation-circle me-2"></i>${data.error || 'Excel import failed'}
+                </div>`;
+            resultDiv.style.display = 'block';
+        }
+    })
+    .catch(err => {
+        showToast('Excel import error: ' + err.message, 'error');
+    });
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        padding: 12px 24px; border-radius: 8px; font-weight: 500;
+        background: ${type === 'success' ? 'rgba(16,185,129,0.9)' : 'rgba(239,68,68,0.9)'};
+        color: white; backdrop-filter: blur(10px);
+        animation: slideIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+<style>
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.modal-backdrop-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.modal.show .modal-backdrop-custom,
+.modal.fade.show .modal-backdrop-custom {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-dialog {
+    z-index: 1050;
+    position: relative;
+}
+
+.modal-backdrop {
+    display: none !important;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+.form-label {
+    margin-bottom: 6px;
+    display: block;
+}
+
+.modal-content .form-control-glass {
+    background: rgba(255,255,255,0.05);
+}
+
+.modal-content .form-control-glass:focus {
+    background: rgba(255,255,255,0.08);
+}
+
+.btn-action {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    margin-right: 4px;
+}
+.btn-action:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+.btn-edit:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+.btn-delete:hover {
+    border-color: #EF4444;
+    color: #EF4444;
+}
+</style>
+{% endblock %}

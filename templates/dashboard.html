@@ -1,0 +1,738 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  /* ─── Dashboard Header ─── */
+  .dashboard-header {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+  }
+  
+  .dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-success));
+    opacity: 0.6;
+  }
+  
+  .company-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(0,212,255,0.2);
+  }
+  
+  .company-name {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+  
+  .company-meta {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+  }
+  
+  .company-meta .badge-glass {
+    margin-right: 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  /* ─── Live Business Clock ─── */
+  .live-clock-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    min-width: 200px;
+  }
+  
+  .live-clock-time {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    font-family: 'Inter', 'SF Mono', monospace;
+  }
+  
+  .live-clock-date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  
+  .live-clock-tz-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+  }
+  
+  .tz-select {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    color: var(--accent-primary);
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.2rem 0.4rem;
+    cursor: pointer;
+    outline: none;
+    max-width: 140px;
+  }
+  
+  .tz-select:focus {
+    border-color: var(--accent-primary);
+  }
+  
+  .tz-select option {
+    background: #1a1f3a;
+    color: #fff;
+    font-size: 0.75rem;
+  }
+  
+  .live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+  }
+  
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10B981;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+    100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+  }
+  
+  /* ─── Entrance Animations ─── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+  
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+  .delay-6 { animation-delay: 0.6s; }
+  
+  /* ─── Card Enhancements ─── */
+  .glass-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+  }
+  
+  .glass-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,212,255,0.05);
+  }
+  
+  /* ─── Health Score Circle ─── */
+  .health-circle-wrap {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    flex-shrink: 0;
+  }
+  
+  .health-circle-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  
+  .health-circle-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.06);
+    stroke-width: 7;
+  }
+  
+  .health-circle-progress {
+    fill: none;
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-dasharray: 339.292;
+    stroke-dashoffset: 339.292;
+    transition: stroke-dashoffset 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .health-circle-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    line-height: 1;
+  }
+  
+  .health-score-value {
+    font-size: 2rem;
+    font-weight: 800;
+    display: block;
+    letter-spacing: -0.03em;
+  }
+  
+  .health-score-total {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  
+  .health-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    margin-top: 0.75rem;
+    text-align: center;
+  }
+  
+  /* ─── Metric Cards ─── */
+  .metric-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+  }
+  
+  .glass-card:hover .metric-icon-box {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  
+  .metric-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  
+  .metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+  }
+  
+  /* ─── Score Colors ─── */
+  .score-excellent { color: #10B981; }
+  .score-good { color: #34D399; }
+  .score-warning { color: #F59E0B; }
+  .score-critical { color: #EF4444; }
+  
+  /* ─── Table Enhancements ─── */
+  .table-glass tbody tr {
+    transition: background 0.2s;
+  }
+  
+  .table-glass tbody tr:hover {
+    background: rgba(255,255,255,0.03);
+  }
+</style>
+
+<!-- Company Header -->
+<div class="dashboard-header animate-in">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="company-avatar">
+        {{ company.company_name[0] if company and company.company_name else 'C' }}
+      </div>
+      <div>
+        <h2 class="company-name mb-0">{{ company.company_name if company and company.company_name else 'Your Company' }}</h2>
+        <div class="company-meta">
+          {% if company %}
+            <span class="badge-glass badge-info">{{ company.industry if company.industry else 'General' }}</span>
+            <span>{{ company.country if company.country else 'Global' }}</span>
+            {% if company.business_type %}
+              <span style="opacity: 0.4;">·</span>
+              <span>{{ company.business_type }}</span>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- Live Business Clock with Timezone Selector -->
+    <div class="live-clock-wrap">
+      <div class="live-clock-time" id="liveClockTime">--:--:--</div>
+      <div class="live-clock-date" id="liveClockDate">---</div>
+      <div class="live-clock-tz-row">
+        <select class="tz-select" id="tzSelect" onchange="onTzChange()">
+          <option value="Asia/Kolkata" {% if company_timezone == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata (IST)</option>
+          <option value="UTC" {% if company_timezone == 'UTC' %}selected{% endif %}>UTC</option>
+          <option value="America/New_York" {% if company_timezone == 'America/New_York' %}selected{% endif %}>America/New_York (EST)</option>
+          <option value="America/Los_Angeles" {% if company_timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los_Angeles (PST)</option>
+          <option value="America/Chicago" {% if company_timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST)</option>
+          <option value="Europe/London" {% if company_timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+          <option value="Europe/Paris" {% if company_timezone == 'Europe/Paris' %}selected{% endif %}>Europe/Paris (CET)</option>
+          <option value="Europe/Berlin" {% if company_timezone == 'Europe/Berlin' %}selected{% endif %}>Europe/Berlin (CET)</option>
+          <option value="Asia/Dubai" {% if company_timezone == 'Asia/Dubai' %}selected{% endif %}>Asia/Dubai (GST)</option>
+          <option value="Asia/Singapore" {% if company_timezone == 'Asia/Singapore' %}selected{% endif %}>Asia/Singapore (SGT)</option>
+          <option value="Asia/Tokyo" {% if company_timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+          <option value="Asia/Shanghai" {% if company_timezone == 'Asia/Shanghai' %}selected{% endif %}>Asia/Shanghai (CST)</option>
+          <option value="Asia/Seoul" {% if company_timezone == 'Asia/Seoul' %}selected{% endif %}>Asia/Seoul (KST)</option>
+          <option value="Australia/Sydney" {% if company_timezone == 'Australia/Sydney' %}selected{% endif %}>Australia/Sydney (AEST)</option>
+          <option value="Pacific/Auckland" {% if company_timezone == 'Pacific/Auckland' %}selected{% endif %}>Pacific/Auckland (NZST)</option>
+        </select>
+      </div>
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        <span>Live Sync</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Executive Score Cards -->
+<div class="stats-grid">
+  <!-- Health Score Card with Animated Circle -->
+  <div class="glass-card glass-card-primary p-4 animate-in delay-1">
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="flex-grow-1">
+        <p class="metric-label mb-2">Health Score</p>
+        <div class="health-circle-wrap mx-auto mb-2">
+          <svg class="health-circle-svg" viewBox="0 0 120 120">
+            <circle class="health-circle-bg" cx="60" cy="60" r="54"></circle>
+            <circle class="health-circle-progress" cx="60" cy="60" r="54"
+                    data-score="{{ summary.health_score }}"
+                    style="stroke: {% if summary.health_score >= 80 %}#10B981{% elif summary.health_score >= 50 %}#F59E0B{% else %}#EF4444{% endif %};">
+            </circle>
+          </svg>
+          <div class="health-circle-text">
+            <span class="health-score-value {% if summary.health_score >= 80 %}score-excellent{% elif summary.health_score >= 50 %}score-warning{% else %}score-critical{% endif %}">
+              {{ "%.0f"|format(summary.health_score) }}
+            </span>
+            <span class="health-score-total">/100</span>
+          </div>
+        </div>
+        <p class="health-label mb-0">
+          {% if summary.health_score >= 80 %}Excellent Condition{% elif summary.health_score >= 50 %}Needs Attention{% else %}Critical Alert{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Revenue Card -->
+  <div class="glass-card glass-card-success p-4 animate-in delay-2">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <p class="metric-label">Revenue (30d)</p>
+        <h3 class="metric-value mb-1" style="color: var(--text-primary);">
+          {{ currency_symbol }}{{ "{:,.0f}".format(summary.revenue_30d) }}
+        </h3>
+        <span class="badge-glass badge-success" style="font-size: 0.7rem;">
+          <i class="fas fa-arrow-up me-1"></i>{{ "%.1f"|format(summary.margin) }}% margin
+        </span>
+      </div>
+      <div class="metric-icon-box" style="background: rgba(16,185,129,0.12);">
+        <i class="fas fa-coins" style="color: #10B981; font-size: 20px;"></i>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Profit Card -->
+  <div class="glass-card glass-card-primary p-4 animate-in delay-3">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <p class="metric-label">Profit (30d)</p>
+        <h3 class="metric-value mb-1" style="color: var(--text-primary);">
+          {{ currency_symbol }}{{ "{:,.0f}".format(summary.profit_30d) }}
+        </h3>
+        <span class="badge-glass badge-info" style="font-size: 0.7rem;">
+          {{ "%.1f"|format(summary.margin) }}% margin
+        </span>
+      </div>
+      <div class="metric-icon-box" style="background: rgba(0,212,255,0.12);">
+        <i class="fas fa-chart-line" style="color: #00D4FF; font-size: 20px;"></i>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Risk Score Card -->
+  <div class="glass-card glass-card-warning p-4 animate-in delay-4">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <p class="metric-label">Risk Score</p>
+        <h3 class="metric-value mb-1">
+          <span class="{% if risk_summary.overall_score >= 70 %}score-critical{% elif risk_summary.overall_score >= 40 %}score-warning{% else %}score-excellent{% endif %}">
+            {{ "%.0f"|format(risk_summary.overall_score) }}
+          </span>
+        </h3>
+        <span class="badge-glass {% if risk_summary.risk_level == 'critical' %}badge-danger{% elif risk_summary.risk_level == 'high' %}badge-warning{% else %}badge-success{% endif %}" style="font-size: 0.7rem;">
+          {{ risk_summary.risk_level|title }} Risk
+        </span>
+      </div>
+      <div class="metric-icon-box" style="background: rgba(245,158,11,0.12);">
+        <i class="fas fa-shield-alt" style="color: #F59E0B; font-size: 20px;"></i>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Customers Card -->
+  <div class="glass-card p-4 animate-in delay-5">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <p class="metric-label">Customers</p>
+        <h3 class="metric-value mb-1" style="color: var(--text-primary);">
+          {{ summary.total_customers }}
+        </h3>
+        <span class="badge-glass {% if summary.churn_rate > 10 %}badge-danger{% elif summary.churn_rate > 5 %}badge-warning{% else %}badge-success{% endif %}" style="font-size: 0.7rem;">
+          {{ "%.1f"|format(summary.churn_rate) }}% churn
+        </span>
+      </div>
+      <div class="metric-icon-box" style="background: rgba(139,92,246,0.12);">
+        <i class="fas fa-users" style="color: #8B5CF6; font-size: 20px;"></i>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Employees Card -->
+  <div class="glass-card p-4 animate-in delay-6">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <p class="metric-label">Employees</p>
+        <h3 class="metric-value mb-1" style="color: var(--text-primary);">
+          {{ summary.total_employees }}
+        </h3>
+        <span class="badge-glass badge-info" style="font-size: 0.7rem;">
+          {{ dept_performance|length }} departments
+        </span>
+      </div>
+      <div class="metric-icon-box" style="background: rgba(244,114,182,0.12);">
+        <i class="fas fa-user-tie" style="color: #F472B6; font-size: 20px;"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4 animate-in delay-3">
+  <div class="col-lg-8">
+    <div class="glass-card p-4" style="height: 420px;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 600; font-size: 1.05rem;">Revenue vs Expenses</h5>
+        <div class="btn-group">
+          <button class="btn btn-outline-glass btn-sm" onclick="loadChartData(30)">30D</button>
+          <button class="btn btn-outline-glass btn-sm active" onclick="loadChartData(90)">90D</button>
+          <button class="btn btn-outline-glass btn-sm" onclick="loadChartData(180)">180D</button>
+        </div>
+      </div>
+      <div id="mainChart" style="width: 100%; height: 340px;"></div>
+    </div>
+  </div>
+  
+  <div class="col-lg-4">
+    <div class="glass-card p-4" style="height: 420px;">
+      <h5 class="mb-3" style="font-weight: 600; font-size: 1.05rem;">Department Performance</h5>
+      <div id="deptChart" style="width: 100%; height: 360px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Row -->
+<div class="row g-4 animate-in delay-4">
+  <div class="col-lg-4">
+    <div class="glass-card p-4">
+      <h5 class="mb-3" style="font-weight: 600; font-size: 1.05rem;">Recent Simulations</h5>
+      {% if simulations %}
+      <div class="table-responsive">
+        <table class="table-glass">
+          <tbody>
+            {% for sim in simulations %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <i class="fas fa-flask" style="color: var(--accent-primary);"></i>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 500;">{{ sim.name }}</div>
+                    <small style="color: var(--text-secondary);">{{ sim.sim_type|replace('_', ' ')|title }}</small>
+                  </div>
+                </div>
+              </td>
+              <td class="text-end">
+                <span class="badge-glass {% if sim.status == 'completed' %}badge-success{% elif sim.status == 'running' %}badge-info{% else %}badge-danger{% endif %}" style="font-size: 0.7rem;">
+                  {{ sim.status|title }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-center" style="color: var(--text-secondary);">No simulations yet</p>
+      {% endif %}
+    </div>
+  </div>
+  
+  <div class="col-lg-4">
+    <div class="glass-card p-4">
+      <h5 class="mb-3" style="font-weight: 600; font-size: 1.05rem;">Recent Forecasts</h5>
+      {% if forecasts %}
+      <div class="table-responsive">
+        <table class="table-glass">
+          <tbody>
+            {% for fc in forecasts %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <i class="fas fa-chart-line" style="color: var(--accent-secondary);"></i>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 500;">{{ fc.name }}</div>
+                    <small style="color: var(--text-secondary);">{{ fc.forecast_type|replace('_', ' ')|title }} | {{ fc.method }}</small>
+                  </div>
+                </div>
+              </td>
+              <td class="text-end">
+                <span class="badge-glass {% if fc.status == 'completed' %}badge-success{% elif fc.status == 'running' %}badge-info{% else %}badge-danger{% endif %}" style="font-size: 0.7rem;">
+                  {{ fc.status|title }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-center" style="color: var(--text-secondary);">No forecasts yet</p>
+      {% endif %}
+    </div>
+  </div>
+  
+  <div class="col-lg-4">
+    <div class="glass-card p-4">
+      <h5 class="mb-3" style="font-weight: 600; font-size: 1.05rem;">Quick Actions</h5>
+      <div class="d-grid gap-2">
+        <a href="{{ url_for('simulation.center') }}" class="btn btn-outline-glass text-start">
+          <i class="fas fa-plus me-2" style="color: var(--accent-primary);"></i>New Simulation
+        </a>
+        <a href="{{ url_for('reports.center') }}" class="btn btn-outline-glass text-start">
+          <i class="fas fa-file-alt me-2" style="color: var(--accent-success);"></i>Generate Report
+        </a>
+        <a href="{{ url_for('documents.center') }}" class="btn btn-outline-glass text-start">
+          <i class="fas fa-upload me-2" style="color: var(--accent-secondary);"></i>Upload Document
+        </a>
+        <a href="{{ url_for('forecasting.index') }}" class="btn btn-outline-glass text-start">
+          <i class="fas fa-chart-area me-2" style="color: var(--accent-warning);"></i>Run Forecast
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentTz = "{{ company_timezone }}";
+
+// ─── Live Business Clock ───
+function updateClock() {
+  const now = new Date();
+  
+  const timeStr = new Intl.DateTimeFormat('en-US', {
+    timeZone: currentTz,
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).format(now);
+  
+  const dateStr = new Intl.DateTimeFormat('en-US', {
+    timeZone: currentTz,
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(now);
+  
+  const tzParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: currentTz,
+    timeZoneName: 'short'
+  }).formatToParts(now);
+  const tzName = tzParts.find(p => p.type === 'timeZoneName')?.value || currentTz;
+  
+  const timeEl = document.getElementById('liveClockTime');
+  const dateEl = document.getElementById('liveClockDate');
+  
+  if (timeEl) timeEl.textContent = timeStr;
+  if (dateEl) dateEl.textContent = dateStr + ' (' + tzName + ')';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  updateClock();
+  setInterval(updateClock, 1000);
+});
+
+// ─── Timezone Change Handler (preview only) ───
+function onTzChange() {
+  const select = document.getElementById('tzSelect');
+  currentTz = select.value;
+  updateClock();
+}
+
+// ─── Animate Health Score Circle ───
+document.addEventListener('DOMContentLoaded', function() {
+  const circle = document.querySelector('.health-circle-progress');
+  if (circle) {
+    const score = parseFloat(circle.getAttribute('data-score')) || 0;
+    const circumference = 2 * Math.PI * 54;
+    const offset = circumference - (score / 100) * circumference;
+    setTimeout(() => {
+      circle.style.strokeDashoffset = offset;
+    }, 400);
+  }
+});
+
+// ─── Currency Symbol ───
+const currencySymbol = "{{ currency_symbol }}";
+
+// ─── Main Revenue Chart ───
+const trendData = {{ trend_data | tojson }};
+const dates = trendData.dates;
+const revenue = trendData.revenue;
+const expenses = trendData.expenses;
+const profit = trendData.profit;
+
+const trace1 = {
+    x: dates, y: revenue,
+    type: 'scatter', mode: 'lines',
+    name: 'Revenue',
+    line: { color: '#00D4FF', width: 2.5, shape: 'spline' },
+    fill: 'tozeroy',
+    fillcolor: 'rgba(0,212,255,0.06)'
+};
+
+const trace2 = {
+    x: dates, y: expenses,
+    type: 'scatter', mode: 'lines',
+    name: 'Expenses',
+    line: { color: '#F472B6', width: 2.5, shape: 'spline' },
+    fill: 'tozeroy',
+    fillcolor: 'rgba(244,114,182,0.06)'
+};
+
+const trace3 = {
+    x: dates, y: profit,
+    type: 'scatter', mode: 'lines',
+    name: 'Profit',
+    line: { color: '#10B981', width: 2, dash: 'dot', shape: 'spline' }
+};
+
+Plotly.newPlot('mainChart', [trace1, trace2, trace3], {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94A3B8', family: 'Inter, sans-serif' },
+    xaxis: { 
+      gridcolor: 'rgba(255,255,255,0.03)', 
+      tickfont: { size: 10 },
+      zeroline: false
+    },
+    yaxis: { 
+      gridcolor: 'rgba(255,255,255,0.03)', 
+      tickfont: { size: 10 }, 
+      tickprefix: currencySymbol,
+      zeroline: false
+    },
+    legend: { orientation: 'h', y: -0.15, font: { size: 11 }, x: 0.5, xanchor: 'center' },
+    margin: { t: 10, r: 10, b: 40, l: 60 },
+    hovermode: 'x unified'
+}, { responsive: true, displayModeBar: false });
+
+// ─── Department Chart ───
+const deptData = {{ dept_performance | tojson }};
+const deptNames = deptData.map(d => d.name);
+const deptBudgets = deptData.map(d => d.budget);
+const deptSpent = deptData.map(d => d.spent);
+
+Plotly.newPlot('deptChart', [
+    {
+        x: deptNames, y: deptBudgets,
+        type: 'bar', name: 'Budget',
+        marker: { color: 'rgba(0,212,255,0.5)', line: { color: 'rgba(0,212,255,0.8)', width: 1 } }
+    },
+    {
+        x: deptNames, y: deptSpent,
+        type: 'bar', name: 'Spent',
+        marker: { color: 'rgba(139,92,246,0.5)', line: { color: 'rgba(139,92,246,0.8)', width: 1 } }
+    }
+], {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94A3B8', family: 'Inter, sans-serif' },
+    xaxis: { 
+      gridcolor: 'rgba(255,255,255,0.03)', 
+      tickfont: { size: 10 },
+      zeroline: false
+    },
+    yaxis: { 
+      gridcolor: 'rgba(255,255,255,0.03)', 
+      tickfont: { size: 10 }, 
+      tickprefix: currencySymbol,
+      zeroline: false
+    },
+    legend: { orientation: 'h', y: -0.2, font: { size: 11 }, x: 0.5, xanchor: 'center' },
+    barmode: 'group',
+    margin: { t: 10, r: 10, b: 60, l: 60 },
+    bargap: 0.3,
+    bargroupgap: 0.1
+}, { responsive: true, displayModeBar: false });
+
+// ─── Chart Period Switcher ───
+function loadChartData(days) {
+    document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    fetch('/dashboard/api/chart-data?days=' + days)
+        .then(r => r.json())
+        .then(data => {
+            Plotly.react('mainChart', [
+                { ...trace1, x: data.dates, y: data.revenue },
+                { ...trace2, x: data.dates, y: data.expenses },
+                { ...trace3, x: data.dates, y: data.profit }
+            ]);
+        });
+}
+</script>
+{% endblock %}

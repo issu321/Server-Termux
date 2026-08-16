@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Customer Simulator{% endblock %}
+{% block page_title %}Customer Simulator{% endblock %}
+{% block content %}
+<div class="glass-card p-4">
+    <h5 class="mb-3" style="font-weight: 600;">Customer Simulator</h5>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="glass-card p-4">
+                <h6 class="mb-3" style="font-weight: 600;">Customer Metrics</h6>
+                <!-- FIX: Use pre-calculated counts from route instead of template filters -->
+                <div class="mb-3">
+                    <small style="color: var(--text-secondary);">Total Customers</small>
+                    <div style="font-size: 24px; font-weight: 700;">{{ total_customers }}</div>
+                </div>
+                <div class="mb-3">
+                    <small style="color: var(--text-secondary);">Active Customers</small>
+                    <div style="font-size: 24px; font-weight: 700; color: #10B981;">{{ active_customers }}</div>
+                </div>
+                <div class="mb-3">
+                    <small style="color: var(--text-secondary);">Churned</small>
+                    <div style="font-size: 24px; font-weight: 700; color: #EF4444;">{{ churned_customers }}</div>
+                </div>
+                <!-- Show company info for context -->
+                {% if company %}
+                <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <small style="color: var(--text-secondary);">Company</small>
+                    <div style="font-size: 14px; font-weight: 600;">{{ company.company_name }}</div>
+                    <small style="color: var(--text-secondary);">Size: {{ company.company_size }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="glass-card p-4">
+                <h6 class="mb-3" style="font-weight: 600;">Growth Simulator</h6>
+                <form onsubmit="event.preventDefault(); runCustomerSim();">
+                    <div class="mb-3"><label class="form-label">Growth Rate (%)</label><input type="number" class="form-control-glass" id="growthRate" value="10" step="0.1"></div>
+                    <div class="mb-3"><label class="form-label">Acquisition Channels</label><input type="text" class="form-control-glass" id="channels" placeholder="e.g. Social, Email, SEO"></div>
+                    <div class="mb-3"><label class="form-label">Retention Improvement (%)</label><input type="number" class="form-control-glass" id="retention" value="5" step="0.1"></div>
+                    <button type="submit" class="btn-glass w-100"><i class="fas fa-play me-2"></i>Simulate Growth</button>
+                </form>
+                <div id="customerSimResult" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function runCustomerSim() {
+    const rate = parseFloat(document.getElementById('growthRate').value) / 100;
+    const retention = parseFloat(document.getElementById('retention').value) / 100;
+    const current = {{ total_customers }};
+    const projected = Math.round(current * (1 + rate));
+    const saved = Math.round(projected * retention);
+    document.getElementById('customerSimResult').innerHTML = `
+        <div class="p-3" style="background: rgba(0,212,255,0.05); border: 1px solid var(--accent-primary); border-radius: 10px;">
+            <div class="row g-2">
+                <div class="col-6"><small style="color: var(--text-secondary);">Projected</small><div style="font-weight: 700; color: var(--accent-primary);">${projected.toLocaleString()}</div></div>
+                <div class="col-6"><small style="color: var(--text-secondary);">Retained (+${(retention*100).toFixed(1)}%)</small><div style="font-weight: 700; color: #10B981;">+${saved.toLocaleString()}</div></div>
+            </div>
+            <div class="mt-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.05);">
+                <small style="color: var(--text-secondary);">Net Growth</small>
+                <div style="font-weight: 700; color: #10B981;">+${(projected - current).toLocaleString()} customers</div>
+            </div>
+        </div>`;
+    document.getElementById('customerSimResult').style.display = 'block';
+}
+</script>
+{% endblock %}

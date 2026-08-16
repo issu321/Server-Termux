@@ -1,0 +1,784 @@
+{% extends "base.html" %}
+{% block title %}Department Twin{% endblock %}
+{% block page_title %}Department Twin{% endblock %}
+{% block content %}
+
+<style>
+.dept-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.dept-summary-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.dept-summary-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.12);
+}
+
+.dept-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--card-accent);
+    opacity: 0.5;
+}
+
+.dept-summary-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.dept-summary-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.dept-summary-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.dept-insights {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.dept-insights h6 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.insight-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.insight-row:last-child { margin-bottom: 0; }
+
+.insight-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.dept-charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 992px) {
+    .dept-charts-row { grid-template-columns: 1fr; }
+}
+
+.dept-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.25rem;
+}
+
+.dept-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.dept-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+}
+
+.dept-card-accent {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--dept-color);
+    opacity: 0.7;
+}
+
+.dept-card-header {
+    padding: 1.25rem 1.25rem 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.dept-info-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dept-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.dept-title-group { line-height: 1.2; }
+
+.dept-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.dept-subtitle {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.dept-status {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    border: 1px solid;
+}
+
+.status-critical { color: #EF4444; background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+.status-warning { color: #F59E0B; background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25); }
+.status-normal { color: #00D4FF; background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.25); }
+.status-good { color: #10B981; background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25); }
+
+.dept-card-body {
+    padding: 1rem 1.25rem;
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+}
+
+.dept-gauge-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+}
+
+.dept-gauge-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.dept-gauge-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.06);
+    stroke-width: 7;
+}
+
+.dept-gauge-progress {
+    fill: none;
+    stroke-width: 7;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1.2s ease;
+}
+
+.dept-gauge-text {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.dept-gauge-percent {
+    font-size: 1rem;
+    font-weight: 800;
+    display: block;
+}
+
+.dept-gauge-label {
+    font-size: 0.55rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dept-metrics-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.metric-row .m-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-row .m-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.dept-card-footer {
+    padding: 0.75rem 1.25rem;
+    background: rgba(255,255,255,0.015);
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.dept-type-breakdown {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.type-pill {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-secondary);
+}
+
+.dept-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.skill-tag {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(0,212,255,0.08);
+    color: #00D4FF;
+    border: 1px solid rgba(0,212,255,0.15);
+}
+
+.dept-util-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.dept-util-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+}
+
+.dept-util-text {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    margin-top: 0.35rem;
+}
+
+.table-glass tbody tr {
+    transition: background 0.15s;
+}
+
+.table-glass tbody tr:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+.modal-backdrop-custom {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.modal.show .modal-backdrop-custom {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-dialog { z-index: 1050; position: relative; }
+.modal-backdrop { display: none !important; }
+
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+</style>
+
+<!-- Summary Cards -->
+<div class="dept-summary-grid">
+    <div class="dept-summary-card" style="--card-accent: var(--accent-primary);">
+        <div class="dept-summary-label">Total Headcount</div>
+        <div class="dept-summary-value" style="color: var(--accent-primary);">{{ total_headcount }}</div>
+        <div class="dept-summary-sub">Across {{ dept_count }} departments</div>
+    </div>
+    <div class="dept-summary-card" style="--card-accent: #8B5CF6;">
+        <div class="dept-summary-label">Total Payroll</div>
+        <div class="dept-summary-value" style="color: #8B5CF6;">{{ total_payroll | format_currency }}</div>
+        <div class="dept-summary-sub">Salaries + Benefits</div>
+    </div>
+    <div class="dept-summary-card" style="--card-accent: #10B981;">
+        <div class="dept-summary-label">Avg Salary</div>
+        <div class="dept-summary-value" style="color: #10B981;">{{ avg_salary | format_currency }}</div>
+        <div class="dept-summary-sub">Company-wide average</div>
+    </div>
+    <div class="dept-summary-card" style="--card-accent: #F59E0B;">
+        <div class="dept-summary-label">Budget Utilization</div>
+        <div class="dept-summary-value" style="color: #F59E0B;">
+            {% if total_budget > 0 %}{{ "%.1f"|format((total_spent / total_budget) * 100) }}%{% else %}0%{% endif %}
+        </div>
+        <div class="dept-summary-sub">{{ total_spent | format_currency }} of {{ total_budget | format_currency }}</div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+    <button class="btn-glass" data-bs-toggle="modal" data-bs-target="#addDeptModal">
+        <i class="fas fa-plus me-2"></i>Add Department
+    </button>
+    <a href="{{ url_for('business_twin.employees') }}" class="btn btn-outline-glass">
+        <i class="fas fa-users me-2"></i>Employee Directory
+    </a>
+</div>
+
+<!-- Insights -->
+{% if departments %}
+{% set sorted_by_payroll = departments | sort(attribute='total_payroll', reverse=true) %}
+{% set highest_payroll = sorted_by_payroll | first %}
+{% set sorted_by_headcount = departments | sort(attribute='headcount', reverse=true) %}
+{% set largest_dept = sorted_by_headcount | first %}
+{% set over_budget = departments | selectattr("utilization", "gt", 100) | list %}
+<div class="dept-insights">
+    <h6><i class="fas fa-lightbulb me-2" style="color: #F59E0B;"></i>Department Insights</h6>
+    <div class="insight-row">
+        <span class="insight-dot" style="background: #8B5CF6;"></span>
+        <span><strong>{{ largest_dept.name }}</strong> is the largest department with <strong>{{ largest_dept.headcount }} employees</strong> ({{ "%.1f"|format((largest_dept.headcount / total_headcount) * 100) if total_headcount > 0 else 0 }}% of total headcount).</span>
+    </div>
+    <div class="insight-row">
+        <span class="insight-dot" style="background: #00D4FF;"></span>
+        <span><strong>{{ highest_payroll.name }}</strong> has the highest payroll at <strong>{{ highest_payroll.total_payroll | format_currency }}</strong> ({{ "%.1f"|format((highest_payroll.total_payroll / total_payroll) * 100) if total_payroll > 0 else 0 }}% of total payroll).</span>
+    </div>
+    {% if over_budget | length > 0 %}
+    <div class="insight-row">
+        <span class="insight-dot" style="background: #EF4444;"></span>
+        <span><strong>{{ over_budget | length }} department{{ 's' if over_budget|length > 1 else '' }}</strong> {{ 'are' if over_budget|length > 1 else 'is' }} over budget. Review spending in: {{ over_budget | map(attribute='name') | join(', ') }}.</span>
+    </div>
+    {% endif %}
+    <div class="insight-row">
+        <span class="insight-dot" style="background: #10B981;"></span>
+        <span>Company-wide payroll efficiency: <strong>{{ avg_salary | format_currency }}</strong> average salary across <strong>{{ total_headcount }}</strong> active employees.</span>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts -->
+<div class="dept-charts-row mb-4">
+    <div class="glass-card p-4">
+        <h6 style="font-weight: 600; font-size: 0.9rem; margin-bottom: 1rem;">Headcount Distribution</h6>
+        <div id="headcountChart" style="width: 100%; height: 280px;"></div>
+    </div>
+    <div class="glass-card p-4">
+        <h6 style="font-weight: 600; font-size: 0.9rem; margin-bottom: 1rem;">Payroll Breakdown by Department</h6>
+        <div id="payrollChart" style="width: 100%; height: 280px;"></div>
+    </div>
+</div>
+
+<!-- Department Cards -->
+<div class="glass-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <h5 style="font-weight: 700; font-size: 1.15rem;">Department Overview</h5>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">Cost centers, headcount, and budget health</p>
+        </div>
+        <span class="badge-glass badge-info">{{ departments|length }} departments</span>
+    </div>
+
+    {% if departments %}
+    <div class="dept-cards-grid">
+        {% for d in departments %}
+        <div class="dept-card" style="--dept-color: {{ d.color }};">
+            <div class="dept-card-accent"></div>
+            <div class="dept-card-header">
+                <div class="dept-info-main">
+                    <div class="dept-avatar" style="background: {{ d.color }}18; color: {{ d.color }};">
+                        {{ d.name[0] }}
+                    </div>
+                    <div class="dept-title-group">
+                        <div class="dept-title">{{ d.name }}</div>
+                        <div class="dept-subtitle">{{ d.code }} {% if d.head_name %}· Head: {{ d.head_name }}{% endif %}</div>
+                    </div>
+                </div>
+                <div class="dept-status {{ 'status-critical' if d.utilization > 100 else 'status-warning' if d.utilization > 90 else 'status-normal' if d.utilization > 50 else 'status-good' }}">
+                    {{ 'Over Budget' if d.utilization > 100 else 'Critical' if d.utilization > 90 else 'High' if d.utilization > 70 else 'Normal' if d.utilization > 40 else 'Low' }}
+                </div>
+            </div>
+            
+            <div class="dept-card-body">
+                <div class="dept-gauge-wrap">
+                    <svg class="dept-gauge-svg" viewBox="0 0 100 100">
+                        <circle class="dept-gauge-bg" cx="50" cy="50" r="42"/>
+                        <circle class="dept-gauge-progress" cx="50" cy="50" r="42" 
+                                stroke="{{ d.color }}" 
+                                stroke-dasharray="263.89" 
+                                stroke-dashoffset="{{ 263.89 - (263.89 * ([d.utilization, 100] | min) / 100) }}"/>
+                    </svg>
+                    <div class="dept-gauge-text">
+                        <span class="dept-gauge-percent" style="color: {{ d.color }};">{{ "%.0f"|format(d.utilization) }}%</span>
+                        <span class="dept-gauge-label">budget</span>
+                    </div>
+                </div>
+                
+                <div class="dept-metrics-col">
+                    <div class="metric-row">
+                        <span class="m-label">Headcount</span>
+                        <span class="m-value">{{ d.headcount }}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="m-label">Avg Salary</span>
+                        <span class="m-value">{{ d.avg_salary | format_currency }}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="m-label">Payroll</span>
+                        <span class="m-value" style="color: #8B5CF6;">{{ d.total_payroll | format_currency }}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="m-label">Budget</span>
+                        <span class="m-value">{{ d.budget | format_currency }}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="m-label">Spent</span>
+                        <span class="m-value" style="color: #EF4444;">{{ d.spent | format_currency }}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="m-label">Remaining</span>
+                        <span class="m-value" style="color: #10B981;">{{ d.remaining | format_currency }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dept-card-footer">
+                {% if d.type_breakdown %}
+                <div class="dept-type-breakdown">
+                    {% for type, count in d.type_breakdown.items() %}
+                    <span class="type-pill">{{ type|replace('_', ' ')|title }}: {{ count }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if d.top_skills %}
+                <div class="dept-skills">
+                    {% for skill in d.top_skills %}
+                    <span class="skill-tag">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="dept-util-bar">
+                    <div class="dept-util-fill" style="width: {{ [d.utilization, 100] | min }}%; background: {{ d.color }}; {% if d.utilization > 100 %}opacity: 0.8;{% endif %}"></div>
+                </div>
+                <div class="dept-util-text">
+                    {% if d.utilization > 100 %}Over budget by {{ (d.spent - d.budget) | format_currency }} · {% endif %}{{ "%.1f"|format(d.utilization) }}% utilized · {{ d.headcount }} employee{{ 's' if d.headcount != 1 else '' }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-building" style="font-size: 48px; color: var(--text-secondary); opacity: 0.3;"></i>
+        <p class="mt-3" style="color: var(--text-secondary);">No departments found.</p>
+        <button class="btn-glass mt-2" data-bs-toggle="modal" data-bs-target="#addDeptModal">
+            <i class="fas fa-plus me-2"></i>Create First Department
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Department Detail Table -->
+<div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 600;">Department Detail</h5>
+    </div>
+    {% if departments %}
+    <div class="table-responsive">
+        <table class="table-glass">
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th class="text-end">Headcount</th>
+                    <th class="text-end">Avg Salary</th>
+                    <th class="text-end">Total Payroll</th>
+                    <th class="text-end">Budget</th>
+                    <th class="text-end">Spent</th>
+                    <th class="text-end">Remaining</th>
+                    <th>Utilization</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for d in departments %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: {{ d.color }};"></span>
+                        <span style="font-weight: 600;">{{ d.name }}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-secondary);">({{ d.code }})</span>
+                    </div>
+                </td>
+                <td class="text-end" style="font-variant-numeric: tabular-nums;">{{ d.headcount }}</td>
+                <td class="text-end" style="font-variant-numeric: tabular-nums;">{{ d.avg_salary | format_currency }}</td>
+                <td class="text-end" style="font-variant-numeric: tabular-nums; color: #8B5CF6; font-weight: 600;">{{ d.total_payroll | format_currency }}</td>
+                <td class="text-end" style="font-variant-numeric: tabular-nums;">{{ d.budget | format_currency }}</td>
+                <td class="text-end" style="font-variant-numeric: tabular-nums; color: #EF4444;">{{ d.spent | format_currency }}</td>
+                <td class="text-end" style="font-variant-numeric: tabular-nums; color: #10B981;">{{ d.remaining | format_currency }}</td>
+                <td style="min-width: 140px;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="progress-glass" style="height: 6px; flex: 1;">
+                            <div style="width: {{ [d.utilization, 100] | min }}%; height: 100%; border-radius: 3px; background: {% if d.utilization > 100 %}#EF4444{% elif d.utilization > 90 %}linear-gradient(90deg, #EF4444, #F59E0B){% elif d.utilization > 70 %}linear-gradient(90deg, #F59E0B, #10B981){% else %}{{ d.color }}{% endif %}; transition: width 0.8s ease;"></div>
+                        </div>
+                        <small style="color: var(--text-secondary); min-width: 42px; font-size: 0.75rem;">{{ "%.1f"|format(d.utilization) }}%</small>
+                    </div>
+                </td>
+                <td>
+                    {% if d.utilization > 100 %}
+                    <span class="badge-glass badge-danger">Over Budget</span>
+                    {% elif d.utilization > 90 %}
+                    <span class="badge-glass badge-danger">Critical</span>
+                    {% elif d.utilization > 70 %}
+                    <span class="badge-glass badge-warning">High</span>
+                    {% elif d.utilization > 40 %}
+                    <span class="badge-glass badge-info">Normal</span>
+                    {% else %}
+                    <span class="badge-glass badge-success">Low</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-center" style="color: var(--text-secondary);">No department data available.</p>
+    {% endif %}
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-building me-2" style="color: var(--accent-primary);"></i>Add Department</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <form id="addDeptForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Name *</label>
+                            <input type="text" class="form-control-glass" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Code</label>
+                            <input type="text" class="form-control-glass" name="code" placeholder="e.g. ENG">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Department Head</label>
+                            <input type="text" class="form-control-glass" name="head_name" placeholder="e.g. John Smith">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Budget</label>
+                            <input type="number" class="form-control-glass" name="budget" value="0" step="0.01">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Color</label>
+                            <input type="color" class="form-control-glass" name="color" value="#00D4FF" style="height: 40px; padding: 4px;">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Description</label>
+                            <textarea class="form-control-glass" name="description" rows="2"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitDepartment()">
+                    <i class="fas fa-save me-2"></i>Save Department
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const deptData = {{ departments | tojson }};
+
+{% if departments and departments|length > 0 %}
+// Headcount Distribution (Donut)
+const headcountLabels = deptData.map(d => d.name);
+const headcountValues = deptData.map(d => d.headcount);
+const headcountColors = deptData.map(d => d.color);
+
+Plotly.newPlot('headcountChart', [{
+    values: headcountValues,
+    labels: headcountLabels,
+    type: 'pie',
+    hole: 0.55,
+    marker: { colors: headcountColors },
+    textinfo: 'label+percent',
+    textposition: 'outside',
+    textfont: { size: 10, color: '#94A3B8' },
+    hovertemplate: '<b>%{label}</b><br>%{value} employees<br>%{percent}<extra></extra>',
+    insidetextorientation: 'horizontal'
+}], {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94A3B8', family: 'Inter' },
+    showlegend: false,
+    margin: { t: 10, r: 10, b: 10, l: 10 },
+    annotations: [{
+        text: '<b>{{ total_headcount }}</b><br>Total',
+        showarrow: false,
+        font: { size: 14, color: '#E2E8F0' }
+    }]
+}, { responsive: true, displayModeBar: false });
+
+// Payroll Breakdown (Horizontal Bar)
+const payrollTrace = {
+    y: deptData.map(d => d.name),
+    x: deptData.map(d => d.total_payroll),
+    type: 'bar',
+    orientation: 'h',
+    marker: {
+        color: deptData.map(d => d.color + 'CC'),
+        line: { color: deptData.map(d => d.color), width: 1 }
+    },
+    text: deptData.map(d => {
+        const v = d.total_payroll;
+        if (v >= 1000000) return (v/1000000).toFixed(1) + 'M';
+        if (v >= 1000) return (v/1000).toFixed(0) + 'K';
+        return v.toString();
+    }),
+    textposition: 'outside',
+    textfont: { color: '#94A3B8', size: 10 },
+    hovertemplate: '<b>%{y}</b><br>Payroll: %{x:,.0f}<extra></extra>'
+};
+
+Plotly.newPlot('payrollChart', [payrollTrace], {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94A3B8', family: 'Inter' },
+    xaxis: {
+        gridcolor: 'rgba(255,255,255,0.03)',
+        tickfont: { size: 10 },
+        zeroline: false,
+        showticklabels: false
+    },
+    yaxis: {
+        gridcolor: 'transparent',
+        tickfont: { size: 11, color: '#E2E8F0' },
+        zeroline: false,
+        automargin: true
+    },
+    margin: { t: 10, r: 60, b: 30, l: 100 },
+    hovermode: 'y unified'
+}, { responsive: true, displayModeBar: false });
+{% endif %}
+
+function submitDepartment() {
+    const form = document.getElementById('addDeptForm');
+    const formData = new FormData(form);
+    
+    fetch('{{ url_for("business_twin.add_department") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Department created successfully!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addDeptModal'));
+            modal.hide();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error creating department', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        padding: 12px 24px; border-radius: 8px; font-weight: 500;
+        background: ${type === 'success' ? 'rgba(16,185,129,0.9)' : 'rgba(239,68,68,0.9)'};
+        color: white; backdrop-filter: blur(10px);
+        animation: slideIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

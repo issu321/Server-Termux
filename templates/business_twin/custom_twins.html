@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+{% block title %}Custom Twins{% endblock %}
+{% block page_title %}Custom Twins{% endblock %}
+
+{% block content %}
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+    <button class="btn-glass" data-bs-toggle="modal" data-bs-target="#createTwinModal">
+        <i class="fas fa-plus me-2"></i>Create New Twin
+    </button>
+</div>
+
+<!-- Custom Twins Grid -->
+{% if twins %}
+<div class="row g-4 mb-4">
+    {% for twin in twins %}
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center position-relative">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: {{ twin.color }}20; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas {{ twin.icon }}" style="color: {{ twin.color }}; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">{{ twin.name }}</h5>
+            <p class="text-muted mb-2" style="font-size: 12px; color: var(--text-secondary);">
+                {{ twin.record_count }} records
+            </p>
+            {% if twin.description %}
+            <p class="text-muted mb-3" style="font-size: 12px; color: var(--text-secondary);">
+                {{ twin.description[:50] }}{% if twin.description|length > 50 %}...{% endif %}
+            </p>
+            {% endif %}
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ url_for('custom_twin.view_custom_twin', slug=twin.slug) }}" class="btn btn-outline-glass btn-sm">
+                    <i class="fas fa-eye me-1"></i>View
+                </a>
+                <button class="btn btn-outline-glass btn-sm" onclick="editTwin({{ twin.to_dict() | tojson }})" title="Edit">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" style="border-color: #EF4444; color: #EF4444;" onclick="deleteTwin({{ twin.id }}, '{{ twin.name }}')" title="Delete">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-card p-5 text-center">
+    <i class="fas fa-cubes" style="font-size: 48px; color: var(--text-secondary); opacity: 0.3;"></i>
+    <h5 class="mt-3" style="color: var(--text-secondary);">No Custom Twins Yet</h5>
+    <p class="text-muted" style="color: var(--text-secondary);">Create your first custom twin to manage any type of data you need.</p>
+    <button class="btn-glass mt-3" data-bs-toggle="modal" data-bs-target="#createTwinModal">
+        <i class="fas fa-plus me-2"></i>Create Your First Twin
+    </button>
+</div>
+{% endif %}
+
+<!-- Create Twin Modal -->
+<div class="modal fade" id="createTwinModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-plus me-2" style="color: var(--accent-primary);"></i>Create New Custom Twin</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <form id="createTwinForm">
+                    <!-- Basic Info -->
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Basic Information</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Twin Name *</label>
+                            <input type="text" class="form-control-glass" name="name" required placeholder="e.g., Assets, Projects, Vehicles">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Icon</label>
+                            <select class="form-control-glass" name="icon">
+                                <option value="fa-cube">Cube (Default)</option>
+                                <option value="fa-box">Box</option>
+                                <option value="fa-cubes">Cubes</option>
+                                <option value="fa-database">Database</option>
+                                <option value="fa-folder">Folder</option>
+                                <option value="fa-file-alt">File</option>
+                                <option value="fa-list">List</option>
+                                <option value="fa-table">Table</option>
+                                <option value="fa-chart-bar">Chart</option>
+                                <option value="fa-chart-pie">Pie Chart</option>
+                                <option value="fa-car">Car</option>
+                                <option value="fa-building">Building</option>
+                                <option value="fa-laptop">Laptop</option>
+                                <option value="fa-mobile-alt">Mobile</option>
+                                <option value="fa-tools">Tools</option>
+                                <option value="fa-cog">Cog</option>
+                                <option value="fa-tag">Tag</option>
+                                <option value="fa-tags">Tags</option>
+                                <option value="fa-user">User</option>
+                                <option value="fa-users">Users</option>
+                                <option value="fa-calendar">Calendar</option>
+                                <option value="fa-clock">Clock</option>
+                                <option value="fa-dollar-sign">Dollar</option>
+                                <option value="fa-euro-sign">Euro</option>
+                                <option value="fa-pound-sign">Pound</option>
+                                <option value="fa-rupee-sign">Rupee</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Theme Color</label>
+                            <input type="color" class="form-control-glass" name="color" value="#00D4FF" style="height: 40px; padding: 4px;">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Description</label>
+                            <textarea class="form-control-glass" name="description" rows="2" placeholder="Describe what this twin will track..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Field Definitions -->
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Field Definitions</h6>
+                    <p class="text-muted mb-3" style="font-size: 12px; color: var(--text-secondary);">Define the fields for your twin. The first field will be used as the unique identifier.</p>
+                    <div id="fieldsContainer">
+                        <!-- Fields will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-outline-glass mb-4" onclick="addField()">
+                        <i class="fas fa-plus me-2"></i>Add Field
+                    </button>
+
+                    <!-- Stats Configuration -->
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Statistics Cards</h6>
+                    <p class="text-muted mb-3" style="font-size: 12px; color: var(--text-secondary);">Configure statistics to display at the top of your twin page.</p>
+                    <div id="statsContainer">
+                        <!-- Stats will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-outline-glass" onclick="addStat()">
+                        <i class="fas fa-plus me-2"></i>Add Stat
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitCreateTwin()">
+                    <i class="fas fa-save me-2"></i>Create Twin
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Twin Modal -->
+<div class="modal fade" id="editTwinModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-pencil-alt me-2" style="color: var(--accent-primary);"></i>Edit Custom Twin</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <form id="editTwinForm">
+                    <input type="hidden" id="editTwinId" name="twin_id">
+                    <!-- Same structure as create modal -->
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Basic Information</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Twin Name *</label>
+                            <input type="text" class="form-control-glass" id="editName" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Icon</label>
+                            <select class="form-control-glass" id="editIcon" name="icon">
+                                <option value="fa-cube">Cube (Default)</option>
+                                <option value="fa-box">Box</option>
+                                <option value="fa-cubes">Cubes</option>
+                                <option value="fa-database">Database</option>
+                                <option value="fa-folder">Folder</option>
+                                <option value="fa-file-alt">File</option>
+                                <option value="fa-list">List</option>
+                                <option value="fa-table">Table</option>
+                                <option value="fa-chart-bar">Chart</option>
+                                <option value="fa-chart-pie">Pie Chart</option>
+                                <option value="fa-car">Car</option>
+                                <option value="fa-building">Building</option>
+                                <option value="fa-laptop">Laptop</option>
+                                <option value="fa-mobile-alt">Mobile</option>
+                                <option value="fa-tools">Tools</option>
+                                <option value="fa-cog">Cog</option>
+                                <option value="fa-tag">Tag</option>
+                                <option value="fa-tags">Tags</option>
+                                <option value="fa-user">User</option>
+                                <option value="fa-users">Users</option>
+                                <option value="fa-calendar">Calendar</option>
+                                <option value="fa-clock">Clock</option>
+                                <option value="fa-dollar-sign">Dollar</option>
+                                <option value="fa-euro-sign">Euro</option>
+                                <option value="fa-pound-sign">Pound</option>
+                                <option value="fa-rupee-sign">Rupee</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Theme Color</label>
+                            <input type="color" class="form-control-glass" id="editColor" name="color" style="height: 40px; padding: 4px;">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Description</label>
+                            <textarea class="form-control-glass" id="editDescription" name="description" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Field Definitions</h6>
+                    <div id="editFieldsContainer"></div>
+                    <button type="button" class="btn btn-outline-glass mb-4" onclick="addEditField()">
+                        <i class="fas fa-plus me-2"></i>Add Field
+                    </button>
+
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Statistics Cards</h6>
+                    <div id="editStatsContainer"></div>
+                    <button type="button" class="btn btn-outline-glass" onclick="addEditStat()">
+                        <i class="fas fa-plus me-2"></i>Add Stat
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitEditTwin()">
+                    <i class="fas fa-save me-2"></i>Update Twin
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let fieldCount = 0;
+let statCount = 0;
+let editFieldCount = 0;
+let editStatCount = 0;
+
+function addField() {
+    const container = document.getElementById('fieldsContainer');
+    const html = `
+        <div class="row g-3 mb-3 field-row" data-index="${fieldCount}">
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="field_name_${fieldCount}" placeholder="Field name (e.g., asset_id)" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="field_label_${fieldCount}" placeholder="Display label (e.g., Asset ID)" required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control-glass" name="field_type_${fieldCount}">
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="integer">Integer</option>
+                    <option value="boolean">Boolean</option>
+                    <option value="date">Date</option>
+                    <option value="email">Email</option>
+                    <option value="url">URL</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control-glass" name="field_default_${fieldCount}" placeholder="Default value">
+            </div>
+            <div class="col-md-1">
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="field_required_${fieldCount}" id="req_${fieldCount}">
+                    <label class="form-check-label" for="req_${fieldCount}" style="font-size: 11px;">Req</label>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.field-row').remove()" style="border-color: #EF4444; color: #EF4444;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    fieldCount++;
+}
+
+function addStat() {
+    const container = document.getElementById('statsContainer');
+    const html = `
+        <div class="row g-3 mb-3 stat-row" data-index="${statCount}">
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="stat_name_${statCount}" placeholder="Stat name (e.g., total_count)" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="stat_label_${statCount}" placeholder="Display label (e.g., Total Count)" required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control-glass" name="stat_type_${statCount}">
+                    <option value="count">Count</option>
+                    <option value="sum">Sum</option>
+                    <option value="avg">Average</option>
+                    <option value="min">Minimum</option>
+                    <option value="max">Maximum</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control-glass" name="stat_field_${statCount}" placeholder="Field (for sum/avg)">
+            </div>
+            <div class="col-md-1">
+                <input type="color" class="form-control-glass" name="stat_color_${statCount}" value="#00D4FF" style="height: 38px; padding: 2px;">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.stat-row').remove()" style="border-color: #EF4444; color: #EF4444;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    statCount++;
+}
+
+function addEditField(field = null) {
+    const container = document.getElementById('editFieldsContainer');
+    const index = editFieldCount;
+    const html = `
+        <div class="row g-3 mb-3 field-row" data-index="${index}">
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="field_name_${index}" placeholder="Field name" value="${field ? field.name : ''}" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="field_label_${index}" placeholder="Display label" value="${field ? field.label : ''}" required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control-glass" name="field_type_${index}">
+                    <option value="text" ${field && field.type === 'text' ? 'selected' : ''}>Text</option>
+                    <option value="number" ${field && field.type === 'number' ? 'selected' : ''}>Number</option>
+                    <option value="integer" ${field && field.type === 'integer' ? 'selected' : ''}>Integer</option>
+                    <option value="boolean" ${field && field.type === 'boolean' ? 'selected' : ''}>Boolean</option>
+                    <option value="date" ${field && field.type === 'date' ? 'selected' : ''}>Date</option>
+                    <option value="email" ${field && field.type === 'email' ? 'selected' : ''}>Email</option>
+                    <option value="url" ${field && field.type === 'url' ? 'selected' : ''}>URL</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control-glass" name="field_default_${index}" placeholder="Default value" value="${field ? field.default : ''}">
+            </div>
+            <div class="col-md-1">
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="field_required_${index}" id="edit_req_${index}" ${field && field.required ? 'checked' : ''}>
+                    <label class="form-check-label" for="edit_req_${index}" style="font-size: 11px;">Req</label>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.field-row').remove()" style="border-color: #EF4444; color: #EF4444;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    editFieldCount++;
+}
+
+function addEditStat(stat = null) {
+    const container = document.getElementById('editStatsContainer');
+    const index = editStatCount;
+    const html = `
+        <div class="row g-3 mb-3 stat-row" data-index="${index}">
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="stat_name_${index}" placeholder="Stat name" value="${stat ? stat.name : ''}" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="stat_label_${index}" placeholder="Display label" value="${stat ? stat.label : ''}" required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control-glass" name="stat_type_${index}">
+                    <option value="count" ${stat && stat.type === 'count' ? 'selected' : ''}>Count</option>
+                    <option value="sum" ${stat && stat.type === 'sum' ? 'selected' : ''}>Sum</option>
+                    <option value="avg" ${stat && stat.type === 'avg' ? 'selected' : ''}>Average</option>
+                    <option value="min" ${stat && stat.type === 'min' ? 'selected' : ''}>Minimum</option>
+                    <option value="max" ${stat && stat.type === 'max' ? 'selected' : ''}>Maximum</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control-glass" name="stat_field_${index}" placeholder="Field" value="${stat ? stat.field : ''}">
+            </div>
+            <div class="col-md-1">
+                <input type="color" class="form-control-glass" name="stat_color_${index}" value="${stat ? stat.color : '#00D4FF'}" style="height: 38px; padding: 2px;">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.stat-row').remove()" style="border-color: #EF4444; color: #EF4444;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    editStatCount++;
+}
+
+function submitCreateTwin() {
+    const form = document.getElementById('createTwinForm');
+    const formData = new FormData(form);
+    
+    // Add counts
+    formData.append('field_count', fieldCount);
+    formData.append('stat_count', statCount);
+    
+    fetch('{{ url_for("custom_twin.create_custom_twin") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error creating twin', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function editTwin(twin) {
+    console.log('Editing twin:', twin);
+    
+    if (!twin || !twin.id) {
+        console.error('Invalid twin data:', twin);
+        showToast('Error: Invalid twin data', 'error');
+        return;
+    }
+    
+    document.getElementById('editTwinId').value = twin.id;
+    document.getElementById('editName').value = twin.name || '';
+    document.getElementById('editIcon').value = twin.icon || 'fa-cube';
+    document.getElementById('editColor').value = twin.color || '#00D4FF';
+    document.getElementById('editDescription').value = twin.description || '';
+    
+    // Clear and populate fields
+    document.getElementById('editFieldsContainer').innerHTML = '';
+    editFieldCount = 0;
+    if (twin.field_definitions && Array.isArray(twin.field_definitions)) {
+        twin.field_definitions.forEach(field => addEditField(field));
+    }
+    
+    // Clear and populate stats
+    document.getElementById('editStatsContainer').innerHTML = '';
+    editStatCount = 0;
+    if (twin.stats_config && Array.isArray(twin.stats_config)) {
+        twin.stats_config.forEach(stat => addEditStat(stat));
+    }
+    
+    // Show the modal
+    const modalElement = document.getElementById('editTwinModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    } else {
+        console.error('Edit modal element not found');
+        showToast('Error: Modal not found', 'error');
+    }
+}
+
+function submitEditTwin() {
+    const form = document.getElementById('editTwinForm');
+    const formData = new FormData(form);
+    const twinId = document.getElementById('editTwinId').value;
+    
+    // Add counts
+    formData.append('field_count', editFieldCount);
+    formData.append('stat_count', editStatCount);
+    
+    // Get the URL from the data attribute or construct it
+    const editUrl = `/business-twin/custom-twins/${twinId}/edit`;
+    
+    fetch(editUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => {
+        if (!r.ok) {
+            throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error updating twin', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Edit twin error:', err);
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function deleteTwin(twinId, twinName) {
+    if (!confirm(`Are you sure you want to delete "${twinName}"? This will delete all records in this twin. This action cannot be undone.`)) {
+        return;
+    }
+    
+    fetch(`/business-twin/custom-twins/${twinId}/delete`, {
+        method: 'DELETE',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => {
+        if (!r.ok) {
+            throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error deleting twin', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Delete twin error:', err);
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        padding: 12px 24px; border-radius: 8px; font-weight: 500;
+        background: ${type === 'success' ? 'rgba(16,185,129,0.9)' : 'rgba(239,68,68,0.9)'};
+        color: white; backdrop-filter: blur(10px);
+        animation: slideIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// Add initial field and stat
+addField();
+addStat();
+</script>
+<style>
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.modal-backdrop-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.modal.show .modal-backdrop-custom,
+.modal.fade.show .modal-backdrop-custom {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-dialog {
+    z-index: 1050;
+    position: relative;
+}
+
+.modal-backdrop {
+    display: none !important;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+.form-label {
+    margin-bottom: 6px;
+    display: block;
+}
+
+.modal-content .form-control-glass {
+    background: rgba(255,255,255,0.05);
+}
+
+.modal-content .form-control-glass:focus {
+    background: rgba(255,255,255,0.08);
+}
+</style>
+{% endblock %}

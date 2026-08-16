@@ -1,0 +1,622 @@
+{% extends "base.html" %}
+{% block title %}Forecasting Lab{% endblock %}
+{% block page_title %}Forecasting Lab{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --glass-bg: rgba(20, 20, 35, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent: #667eea;
+    --accent-glow: rgba(102, 126, 234, 0.3);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+  }
+  
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .form-control-glass {
+    background: rgba(15, 15, 30, 0.8);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  
+  .form-control-glass:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  
+  .btn-glass {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  
+  .btn-glass:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+    color: white;
+  }
+  
+  .btn-outline-glass {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  
+  .btn-outline-glass:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .badge-glass {
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  
+  .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+  .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+  .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+  .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); border-color: rgba(59, 130, 246, 0.3); }
+  
+  .table-glass {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .table-glass th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    text-align: left;
+  }
+  
+  .table-glass td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+  
+  .table-glass tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  
+  .metric-card {
+    background: rgba(15, 15, 30, 0.5);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s;
+  }
+  
+  .metric-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  
+  .metric-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .metric-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+  }
+  
+  .chart-container {
+    background: rgba(15, 15, 30, 0.4);
+    border-radius: 12px;
+    padding: 1rem;
+  }
+  
+  .insight-box {
+    background: rgba(102, 126, 234, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+  }
+  
+  .section-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+  }
+  
+  select.form-control-glass {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+  }
+  
+  .forecast-table-container {
+    max-height: 320px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+  }
+  
+  .forecast-table-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .forecast-table-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .forecast-table-container::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 3px;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="row g-4">
+    <!-- LEFT COLUMN: Form & Details -->
+    <div class="col-lg-4">
+      <!-- New Forecast Form -->
+      <div class="glass-card p-4">
+        <h5 class="section-title"><i class="fas fa-wand-magic-sparkles me-2" style="color: var(--accent);"></i>New Forecast</h5>
+        <form method="POST" action="{{ url_for('forecasting.run_forecast') }}" id="forecastForm">
+          <div class="mb-3">
+            <label class="form-label" style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Forecast Name</label>
+            <input type="text" class="form-control-glass" name="name" placeholder="e.g. Q3 Revenue Projection" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label" style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Forecast Type</label>
+            <select class="form-control-glass" name="forecast_type" required>
+              {% if forecast_types %}
+                {% for ft in forecast_types %}
+                <option value="{{ ft }}">{{ forecast_labels.get(ft, ft)|replace('_', ' ')|title }}</option>
+                {% endfor %}
+              {% else %}
+                <option value="revenue">Revenue Forecast</option>
+                <option value="expenses">Expense Forecast</option>
+                <option value="profit">Profit Forecast</option>
+                <option value="customers">Customer Growth</option>
+                <option value="inventory">Inventory Demand</option>
+              {% endif %}
+            </select>
+            <div class="form-text" style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.25rem;">
+              Select the business metric you want to predict.
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label" style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Forecasting Method</label>
+            <select class="form-control-glass" name="method" required>
+              {% if methods %}
+                {% for m in methods %}
+                <option value="{{ m }}">{{ m|replace('_', ' ')|title }}</option>
+                {% endfor %}
+              {% else %}
+                <option value="prophet">Prophet (Recommended)</option>
+                <option value="moving_average">Moving Average</option>
+                <option value="linear_regression">Linear Regression</option>
+                <option value="exponential_smoothing">Exponential Smoothing</option>
+                <option value="arima">ARIMA</option>
+              {% endif %}
+            </select>
+            <div class="form-text" style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.25rem;">
+              Prophet handles seasonality best. Moving Average is simplest.
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label class="form-label" style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Prediction Horizon</label>
+            <select class="form-control-glass" name="horizon_days" required>
+              {% if horizons %}
+                {% for h in horizons %}
+                <option value="{{ h }}" {% if h == 30 %}selected{% endif %}>{{ h }} days</option>
+                {% endfor %}
+              {% else %}
+                <option value="7">7 days (1 week)</option>
+                <option value="14">14 days (2 weeks)</option>
+                <option value="30" selected>30 days (1 month)</option>
+                <option value="60">60 days (2 months)</option>
+                <option value="90">90 days (1 quarter)</option>
+                <option value="180">180 days (6 months)</option>
+                <option value="365">365 days (1 year)</option>
+              {% endif %}
+            </select>
+            <div class="form-text" style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.25rem;">
+              How far into the future to predict. Longer horizons = less accuracy.
+            </div>
+          </div>
+          
+          <button type="submit" class="btn-glass w-100">
+            <i class="fas fa-chart-line me-2"></i>Generate Forecast
+          </button>
+        </form>
+      </div>
+      
+      {% if view_forecast and summary %}
+      <!-- Forecast Details Panel -->
+      <div class="glass-card p-4 mt-4">
+        <h5 class="section-title"><i class="fas fa-circle-info me-2" style="color: var(--info);"></i>Forecast Details</h5>
+        <table class="table-glass">
+          <tbody>
+            <tr>
+              <td style="color: var(--text-secondary);">Type</td>
+              <td class="text-end" style="font-weight: 600;">
+                <span class="badge-glass badge-info">{{ forecast_labels.get(view_forecast.forecast_type, view_forecast.forecast_type)|replace('_', ' ')|title }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="color: var(--text-secondary);">Method</td>
+              <td class="text-end" style="font-weight: 500;">{{ view_forecast.method|replace('_', ' ')|title }}</td>
+            </tr>
+            <tr>
+              <td style="color: var(--text-secondary);">Horizon</td>
+              <td class="text-end" style="font-weight: 500;">{{ view_forecast.horizon_days }} days</td>
+            </tr>
+            <tr>
+              <td style="color: var(--text-secondary);">Status</td>
+              <td class="text-end">
+                <span class="badge-glass {% if view_forecast.status == 'completed' %}badge-success{% else %}badge-warning{% endif %}">
+                  {{ view_forecast.status|title }}
+                </span>
+              </td>
+            </tr>
+            {% if view_forecast.accuracy_mae is not none %}
+            <tr>
+              <td style="color: var(--text-secondary);">MAE</td>
+              <td class="text-end" style="font-weight: 500;">{{ "%.2f"|format(view_forecast.accuracy_mae) }}</td>
+            </tr>
+            {% endif %}
+            {% if view_forecast.accuracy_rmse is not none %}
+            <tr>
+              <td style="color: var(--text-secondary);">RMSE</td>
+              <td class="text-end" style="font-weight: 500;">{{ "%.2f"|format(view_forecast.accuracy_rmse) }}</td>
+            </tr>
+            {% endif %}
+            {% if view_forecast.accuracy_mape is not none %}
+            <tr>
+              <td style="color: var(--text-secondary);">MAPE</td>
+              <td class="text-end" style="font-weight: 500;">{{ "%.2f"|format(view_forecast.accuracy_mape) }}%</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- AI Insight -->
+      <div class="glass-card p-4 mt-4">
+        <h5 class="section-title"><i class="fas fa-lightbulb me-2" style="color: var(--warning);"></i>Analysis & Recommendation</h5>
+        <div class="insight-box">
+          <p class="mb-2" style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">
+            {{ summary.direction_icon }} {{ summary.trend|title }} Trend Detected
+          </p>
+          <p class="mb-0" style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6;">
+            {{ summary.recommendation }}
+          </p>
+        </div>
+        <div class="mt-3" style="font-size: 0.8rem; color: var(--text-secondary);">
+          <i class="fas fa-info-circle me-1"></i>
+          Based on {{ results|length }} data points using {{ view_forecast.method|replace('_', ' ')|title }}.
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    
+    <!-- RIGHT COLUMN: Results & History -->
+    <div class="col-lg-8">
+      {% if view_forecast and results %}
+      <!-- Key Metrics -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+          <div class="metric-card">
+            <div class="metric-label">Start Value</div>
+            <div class="metric-value">{{ (currency_symbol + "{:,.0f}".format(summary.first_value)) if summary else 'N/A' }}</div>
+            <div class="metric-sub">Day 1 projection</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="metric-card">
+            <div class="metric-label">End Value</div>
+            <div class="metric-value" style="color: {% if summary and summary.trend == 'upward' %}var(--success){% elif summary and summary.trend == 'downward' %}var(--danger){% else %}var(--text-primary){% endif %};">
+              {{ (currency_symbol + "{:,.0f}".format(summary.last_value)) if summary else 'N/A' }}
+            </div>
+            <div class="metric-sub">Final projection</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="metric-card">
+            <div class="metric-label">Total Change</div>
+            <div class="metric-value" style="color: {% if summary and summary.change >= 0 %}var(--success){% else %}var(--danger){% endif %};">
+              {% if summary %}
+                {% if summary.change >= 0 %}+{% else %}-{% endif %}{{ currency_symbol }}{{ "{:,.0f}".format(summary.change|abs) }}
+              {% else %}
+                N/A
+              {% endif %}
+            </div>
+            <div class="metric-sub">{{ "{:+.1f}%".format(summary.change_pct) if summary else '' }}</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="metric-card">
+            <div class="metric-label">Volatility</div>
+            <div class="metric-value">{{ "{:.1f}%".format(summary.volatility) if summary else 'N/A' }}</div>
+            <div class="metric-sub">Max swing range</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chart -->
+      <div class="glass-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="section-title m-0"><i class="fas fa-chart-area me-2" style="color: var(--accent);"></i>Forecast Visualization</h5>
+          <div class="d-flex gap-2">
+            <span class="badge-glass badge-info"><i class="fas fa-layer-group me-1"></i>Confidence Band</span>
+          </div>
+        </div>
+        <div class="chart-container">
+          <div id="forecastChart" style="width: 100%; height: 400px;"></div>
+        </div>
+        <div class="mt-3 row g-2">
+          <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #00D4FF;"></div>
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">Forecast Line (Best Estimate)</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: rgba(0,212,255,0.3);"></div>
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">Upper Bound (Optimistic)</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: rgba(0,212,255,0.1);"></div>
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">Lower Bound (Conservative)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Data Table -->
+      <div class="glass-card p-4 mb-4">
+        <h5 class="section-title"><i class="fas fa-table me-2" style="color: var(--text-secondary);"></i>Projected Values</h5>
+        <div class="forecast-table-container">
+          <table class="table-glass" style="margin: 0;">
+            <thead style="position: sticky; top: 0; background: rgba(20, 20, 35, 0.95); z-index: 10;">
+              <tr>
+                <th>Date</th>
+                <th>Forecast</th>
+                <th>Lower Bound</th>
+                <th>Upper Bound</th>
+                <th>Range Width</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in results %}
+              <tr>
+                <td style="font-family: monospace; font-size: 0.85rem;">{{ r.date.strftime('%Y-%m-%d') }}</td>
+                <td style="font-weight: 600; color: var(--text-primary);">{{ currency_symbol }}{{ "{:,.0f}".format(r.value) }}</td>
+                <td style="color: var(--text-secondary);">{{ currency_symbol }}{{ "{:,.0f}".format(r.lower_bound) if r.lower_bound else '—' }}</td>
+                <td style="color: var(--text-secondary);">{{ currency_symbol }}{{ "{:,.0f}".format(r.upper_bound) if r.upper_bound else '—' }}</td>
+                <td>
+                  {% if r.lower_bound and r.upper_bound %}
+                    {% set width = r.upper_bound - r.lower_bound %}
+                    {% set pct = (width / r.value * 100) if r.value != 0 else 0 %}
+                    <span class="badge-glass {% if pct < 10 %}badge-success{% elif pct < 25 %}badge-warning{% else %}badge-danger{% endif %}">
+                      {{ "{:.1f}%".format(pct) }}
+                    </span>
+                  {% else %}
+                    <span style="color: var(--text-secondary);">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-2" style="font-size: 0.75rem; color: var(--text-secondary);">
+          <i class="fas fa-circle-question me-1"></i>
+          Range width indicates model uncertainty. Narrow = high confidence, Wide = more uncertainty.
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Recent Forecasts -->
+      <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="section-title m-0"><i class="fas fa-clock-rotate-left me-2" style="color: var(--text-secondary);"></i>Recent Forecasts</h5>
+          {% if forecasts|length > 0 %}
+          <span class="badge-glass badge-info">{{ forecasts|length }} total</span>
+          {% endif %}
+        </div>
+        
+        {% if forecasts %}
+        <div class="table-responsive">
+          <table class="table-glass">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Method</th>
+                <th>Horizon</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for fc in forecasts %}
+              <tr>
+                <td style="font-weight: 600;">{{ fc.name }}</td>
+                <td>
+                  <span class="badge-glass badge-info">
+                    {{ forecast_labels.get(fc.forecast_type, fc.forecast_type)|replace('_', ' ')|title }}
+                  </span>
+                </td>
+                <td style="color: var(--text-secondary);">{{ fc.method|replace('_', ' ')|title }}</td>
+                <td>{{ fc.horizon_days }}d</td>
+                <td>
+                  <span class="badge-glass 
+                    {% if fc.status == 'completed' %}badge-success
+                    {% elif fc.status == 'running' %}badge-info
+                    {% elif fc.status == 'failed' %}badge-danger
+                    {% else %}badge-warning{% endif %}">
+                    {{ fc.status|title }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <a href="{{ url_for('forecasting.view', forecast_id=fc.id) }}" class="btn-outline-glass">
+                    <i class="fas fa-eye me-1"></i>View
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="fas fa-chart-line mb-3" style="font-size: 2.5rem; opacity: 0.3;"></i>
+          <p class="mb-1" style="font-weight: 600; color: var(--text-primary);">No forecasts yet</p>
+          <p class="mb-0" style="font-size: 0.875rem;">Create your first forecast using the form on the left.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if view_forecast and results %}
+<script>
+  window.CURRENCY_SYMBOL = "{{ currency_symbol }}";
+  
+  const results = {{ results|map(attribute='value')|list|tojson }};
+  const lower = {{ results|map(attribute='lower_bound')|list|tojson }};
+  const upper = {{ results|map(attribute='upper_bound')|list|tojson }};
+  const dates = {{ results|map(attribute='date')|map('string')|list|tojson }};
+  
+  const hasConfidence = lower.some(v => v !== null && v !== undefined);
+  
+  const traces = [
+    {
+      x: dates,
+      y: results,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'Forecast',
+      line: { color: '#00D4FF', width: 3, shape: 'spline' },
+      hovertemplate: '<b>%{x}</b><br>Forecast: ' + window.CURRENCY_SYMBOL + '%{y:,.0f}<extra></extra>'
+    }
+  ];
+  
+  if (hasConfidence) {
+    traces.push(
+      {
+        x: dates,
+        y: upper,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Upper Bound',
+        line: { color: 'rgba(0,212,255,0.2)', width: 1, shape: 'spline' },
+        fill: 'tonexty',
+        fillcolor: 'rgba(0,212,255,0.08)',
+        hovertemplate: '<b>%{x}</b><br>Upper: ' + window.CURRENCY_SYMBOL + '%{y:,.0f}<extra></extra>'
+      },
+      {
+        x: dates,
+        y: lower,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Lower Bound',
+        line: { color: 'rgba(0,212,255,0.2)', width: 1, shape: 'spline' },
+        hovertemplate: '<b>%{x}</b><br>Lower: ' + window.CURRENCY_SYMBOL + '%{y:,.0f}<extra></extra>'
+      }
+    );
+  }
+  
+  Plotly.newPlot('forecastChart', traces, {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94A3B8', family: 'Inter, sans-serif' },
+    xaxis: {
+      gridcolor: 'rgba(255,255,255,0.03)',
+      tickfont: { size: 11 },
+      title: { text: 'Date', font: { size: 12, color: '#64748b' } }
+    },
+    yaxis: {
+      gridcolor: 'rgba(255,255,255,0.03)',
+      tickfont: { size: 11 },
+      title: { text: 'Value (' + window.CURRENCY_SYMBOL + ')', font: { size: 12, color: '#64748b' } },
+      tickprefix: window.CURRENCY_SYMBOL,
+      tickformat: ',.0f'
+    },
+    legend: {
+      orientation: 'h',
+      y: -0.2,
+      x: 0.5,
+      xanchor: 'center',
+      font: { size: 12 }
+    },
+    margin: { t: 20, r: 20, b: 60, l: 70 },
+    hovermode: 'x unified'
+  }, {
+    responsive: true,
+    displayModeBar: false
+  });
+</script>
+{% endif %}
+{% endblock %}

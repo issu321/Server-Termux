@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+
+{% block title %}{{ sim_label }} - Simulation{% endblock %}
+
+{% block content %}
+<style>
+/* ========== FORCE DARK THEME FOR ENTIRE TAX SIM PAGE ========== */
+.tax-sim-page {
+    background-color: #0B1120 !important;
+    color: #ffffff !important;
+}
+
+/* All cards dark */
+.tax-sim-page .card {
+    background-color: #1a1f3a !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+/* Card headers */
+.tax-sim-page .card-header {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+/* Card body text */
+.tax-sim-page .card-body {
+    color: #ffffff !important;
+}
+
+/* All headings */
+.tax-sim-page h2,
+.tax-sim-page h4,
+.tax-sim-page h5,
+.tax-sim-page h6 {
+    color: #ffffff !important;
+}
+
+/* All paragraphs and descriptions - BRIGHT WHITE */
+.tax-sim-page p,
+.tax-sim-page .text-body-secondary,
+.tax-sim-page .form-text,
+.tax-sim-page .form-label,
+.tax-sim-page .metric-label,
+.tax-sim-page .metric-sub,
+.tax-sim-page .zero-note,
+.tax-sim-page .small {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Form inputs dark */
+.tax-sim-page .form-control,
+.tax-sim-page .form-select {
+    background-color: #0f1729 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.tax-sim-page .form-control:focus,
+.tax-sim-page .form-select:focus {
+    background-color: #0f1729 !important;
+    color: #ffffff !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Placeholder text in inputs */
+.tax-sim-page .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Baseline badge */
+.tax-sim-page .badge {
+    color: #ffffff !important;
+}
+
+/* Metric boxes - dark background, bright text */
+.metric-box {
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: 100%;
+    transition: transform 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background-color: #0f1729 !important;
+    color: #ffffff !important;
+}
+.metric-box:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.metric-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+.metric-sub {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.zero-note {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-style: italic;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+/* Impact colors */
+.impact-positive {
+    color: #20c997 !important;
+}
+.impact-negative {
+    color: #ff6b6b !important;
+}
+.impact-neutral {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Risk pills */
+.risk-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+.risk-low {
+    background: rgba(32, 201, 151, 0.2);
+    color: #20c997;
+}
+.risk-medium {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+.risk-high {
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+}
+
+/* Analysis box */
+.analysis-box {
+    background-color: #0f1729 !important;
+    border-left: 4px solid #0d6efd;
+    padding: 1.25rem;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-left-width: 4px;
+    color: #ffffff !important;
+}
+
+/* Results header */
+#resultsCard .card-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%) !important;
+    border: none !important;
+}
+
+/* Placeholder card */
+#placeholderCard .card-body {
+    color: #ffffff !important;
+}
+#placeholderCard i,
+#placeholderCard h4,
+#placeholderCard p {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Override any Bootstrap text-body classes */
+.tax-sim-page .text-body {
+    color: #ffffff !important;
+}
+
+/* Button hover fix */
+.tax-sim-page .btn-outline-primary {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+.tax-sim-page .btn-outline-primary:hover {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+}
+
+/* ===== COMPANY BASELINE - FULL WIDTH VERTICAL LAYOUT (NO TRUNCATION) ===== */
+.baseline-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.baseline-row:last-child {
+    border-bottom: none;
+}
+.baseline-label {
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+.baseline-amount {
+    color: #ffffff !important;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: 'Segoe UI', system-ui, monospace;
+    text-align: right;
+}
+</style>
+
+<div class="container-fluid py-4 tax-sim-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ sim_label }}</h2>
+            <p class="text-body-secondary mb-0">Simulate the impact of tax rate changes on your business</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Parameters -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h5 class="mb-0"><i class="fas fa-sliders-h me-2 text-primary"></i>Simulation Parameters</h5>
+                </div>
+                <div class="card-body">
+                    <form id="simulationForm" method="POST" action="{{ url_for('simulation.run_simulation', sim_type=sim_type) }}">
+                        <input type="hidden" name="name" value="{{ sim_label }} - {{ now }}">
+
+                        <div class="mb-3">
+                            <label for="current_rate" class="form-label fw-semibold">Current Tax Rate (%)</label>
+                            <input type="number" class="form-control form-control-lg" id="current_rate" name="current_rate"
+                                   value="25" min="0" max="100" step="0.1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="new_rate" class="form-label fw-semibold">New Tax Rate (%)</label>
+                            <input type="number" class="form-control form-control-lg" id="new_rate" name="new_rate"
+                                   value="28" min="0" max="100" step="0.1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tax_type" class="form-label fw-semibold">Tax Type</label>
+                            <select class="form-select form-select-lg" id="tax_type" name="tax_type" required>
+                                <option value="corporate" selected>Corporate</option>
+                                <option value="income">Income</option>
+                                <option value="sales">Sales</option>
+                                <option value="vat">VAT</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="affected_revenue" class="form-label fw-semibold">Affected Revenue ({{ currency_symbol }})</label>
+                            <input type="number" class="form-control form-control-lg" id="affected_revenue" name="affected_revenue"
+                                   value="{{ baseline.revenue|int if baseline else 100000000 }}" min="0" step="1">
+                            <div class="form-text mt-1">Leave as company revenue or enter a specific amount</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="runBtn">
+                            <i class="fas fa-play me-2"></i>Run Simulation
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% if baseline %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0"><i class="fas fa-building me-2 text-primary"></i>Company Baseline</h6>
+                </div>
+                <div class="card-body">
+                    <div class="baseline-row">
+                        <span class="baseline-label">Annual Revenue</span>
+                        <span class="baseline-amount">{{ currency_symbol }}{{ "{:,.0f}".format(baseline.revenue) }}</span>
+                    </div>
+                    <div class="baseline-row">
+                        <span class="baseline-label">Operating Costs</span>
+                        <span class="baseline-amount">{{ currency_symbol }}{{ "{:,.0f}".format(baseline.costs) }}</span>
+                    </div>
+                    <div class="baseline-row">
+                        <span class="baseline-label">Gross Profit</span>
+                        <span class="baseline-amount">{{ currency_symbol }}{{ "{:,.0f}".format(baseline.profit) }}</span>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2">
+                            Profit Margin: {{ "%.2f"|format((baseline.profit / baseline.revenue * 100) if baseline.revenue > 0 else 0) }}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Results -->
+        <div class="col-xl-8 col-lg-7">
+            <!-- Placeholder -->
+            <div class="card border-0 shadow-sm" id="placeholderCard">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-calculator fa-4x opacity-25"></i>
+                    </div>
+                    <h4>Run the simulation to see results</h4>
+                    <p class="mb-0">Enter your tax parameters and click Run Simulation</p>
+                </div>
+            </div>
+
+            <!-- Results Card -->
+            <div class="card border-0 shadow-sm" id="resultsCard" style="display: none;">
+                <div class="card-header bg-primary bg-gradient text-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Simulation Results</h5>
+                    <span class="badge bg-success bg-opacity-50 text-white border border-success" id="statusBadge">Completed</span>
+                </div>
+                <div class="card-body p-4" id="resultsBody"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<script src="{{ url_for('static', filename='js/simulation_formatter.js') }}"></script>
+<script>
+document.getElementById('simulationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('runBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i>Running...';
+    btn.disabled = true;
+
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.simulation) {
+            showResults(data.simulation);
+        } else {
+            alert('Simulation failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while running the simulation.');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+function showResults(sim) {
+    document.getElementById('placeholderCard').style.display = 'none';
+    document.getElementById('resultsCard').style.display = 'block';
+
+    const revenueImpact = sim.revenue_after - sim.revenue_before;
+    const profitImpact = sim.profit_after - sim.profit_before;
+    const costImpact = sim.cost_after - sim.cost_before;
+
+    const profitClass = profitImpact >= 0 ? 'impact-positive' : 'impact-negative';
+    const revenueClass = revenueImpact >= 0 ? 'impact-positive' : 'impact-negative';
+    const costClass = costImpact >= 0 ? 'impact-positive' : 'impact-negative';
+
+    const riskClass = sim.risk_score <= 30 ? 'risk-low' : sim.risk_score <= 60 ? 'risk-medium' : 'risk-high';
+
+    const isCorpTax = sim.tax_on_profit === true || sim.tax_on_profit === 'true';
+
+    const revenueDisplay = (isCorpTax && Math.abs(revenueImpact) < 0.01) 
+        ? '<span class="impact-neutral">No Change</span>' 
+        : `<span class="${revenueClass}">${fmtMoneySigned(revenueImpact)}</span>`;
+    
+    const costDisplay = (isCorpTax && Math.abs(costImpact) < 0.01) 
+        ? '<span class="impact-neutral">No Change</span>' 
+        : `<span class="${costClass}">${fmtMoneySigned(costImpact)}</span>`;
+
+    let html = `
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="metric-box">
+                    <div class="metric-label">Revenue Impact</div>
+                    <div class="metric-value">
+                        ${revenueDisplay}
+                    </div>
+                    <div class="metric-sub">
+                        ${fmtMoney(sim.revenue_before)} \u2192 ${fmtMoney(sim.revenue_after)}
+                    </div>
+                    ${isCorpTax && Math.abs(revenueImpact) < 0.01 ? '<div class="zero-note">Corporate tax does not affect revenue</div>' : ''}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="metric-box">
+                    <div class="metric-label">Profit Impact</div>
+                    <div class="metric-value ${profitClass}">
+                        ${fmtMoneySigned(profitImpact)}
+                    </div>
+                    <div class="metric-sub">
+                        ${fmtMoney(sim.profit_before)} \u2192 ${fmtMoney(sim.profit_after)}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="metric-box">
+                    <div class="metric-label">Tax Impact</div>
+                    <div class="metric-value ${sim.tax_diff > 0 ? 'impact-negative' : 'impact-positive'}">
+                        ${fmtMoneySigned(sim.tax_diff)}
+                    </div>
+                    <div class="metric-sub">
+                        on ${fmtMoney(sim.taxable_base)} taxable income
+                        <br>using ${sim.profit_margin_pct}% profit margin
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="metric-box">
+                    <div class="metric-label">Cost Impact</div>
+                    <div class="metric-value">
+                        ${costDisplay}
+                    </div>
+                    <div class="metric-sub">
+                        ${fmtMoney(sim.cost_before)} \u2192 ${fmtMoney(sim.cost_after)}
+                    </div>
+                    ${isCorpTax && Math.abs(costImpact) < 0.01 ? '<div class="zero-note">Tax is applied to profit, not added to operating costs</div>' : ''}
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-3" style="background-color: #0f1729; border: 1px solid rgba(255,255,255,0.12);">
+            <span class="fw-bold" style="color: #ffffff;">Risk Score:</span>
+            <span class="risk-pill ${riskClass}">${sim.risk_score}</span>
+        </div>
+
+        <div class="analysis-box mb-3">
+            <h6 class="fw-bold mb-2"><i class="fas fa-info-circle me-2 text-primary"></i>Analysis</h6>
+            <p class="mb-0" style="color: rgba(255,255,255,0.85);">${escapeHtml(sim.recommendations) || 'No analysis available.'}</p>
+        </div>
+
+        <div class="text-end">
+            <button class="btn btn-outline-primary" onclick="saveSimulation(${sim.id})">
+                <i class="fas fa-save me-2"></i>Save Simulation
+            </button>
+        </div>
+    `;
+
+    document.getElementById('resultsBody').innerHTML = html;
+}
+
+async function saveSimulation(simId) {
+    try {
+        const response = await fetch(`/simulation/save/${simId}`, { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            alert('Simulation saved successfully!');
+        }
+    } catch (error) {
+        console.error('Error saving:', error);
+    }
+}
+</script>
+{% endblock %}

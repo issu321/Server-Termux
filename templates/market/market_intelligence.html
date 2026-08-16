@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+{% block title %}Market Intelligence{% endblock %}
+{% block page_title %}Market Intelligence{% endblock %}
+
+{% block content %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<style>
+  :root {
+    --glass-bg: rgba(20, 20, 35, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent: #667eea;
+    --accent-glow: rgba(102, 126, 234, 0.3);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+  }
+  
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .metric-card {
+    background: rgba(15, 15, 30, 0.5);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s;
+  }
+  
+  .metric-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  
+  .metric-label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  
+  .metric-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .metric-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+  }
+  
+  .badge-glass {
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  
+  .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+  .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+  .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+  .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); border-color: rgba(59, 130, 246, 0.3); }
+  .badge-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: rgba(139, 92, 246, 0.3); }
+  
+  .insight-banner {
+    background: rgba(102, 126, 234, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .table-glass {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .table-glass th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    text-align: left;
+  }
+  
+  .table-glass td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+  
+  .table-glass tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease-out;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+  }
+  
+  .btn-glass {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.6rem 1.25rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-glass:hover {
+    opacity: 0.9;
+    color: white;
+  }
+  
+  .btn-outline-glass {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  
+  .btn-outline-glass:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .form-control-glass {
+    background: rgba(15, 15, 30, 0.8);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  
+  .form-control-glass:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.2rem var(--accent-glow);
+  }
+  
+  .section-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <!-- Header Actions -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="text-white m-0" style="font-weight: 700;">Market Intelligence</h2>
+      <p class="mb-0" style="color: var(--text-secondary); font-size: 0.9rem;">
+        {% if summary %}
+          {{ summary.industry }} sector · {{ summary.region }} · Benchmarked {{ summary.generated_at }}
+        {% else %}
+          Industry benchmarks and competitive landscape analysis
+        {% endif %}
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn-outline-glass" data-bs-toggle="collapse" data-bs-target="#importPanel">
+        <i class="fas fa-upload"></i> Import Data
+      </button>
+      <form method="POST" action="{{ url_for('market_intelligence.refresh') }}" style="display:inline;">
+        <button type="submit" class="btn-glass">
+          <i class="fas fa-rotate"></i> Refresh Benchmarks
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if summary %}
+  <!-- Top Insight Banner -->
+  <div class="insight-banner mb-4">
+    <div class="d-flex align-items-start gap-3">
+      <i class="fas fa-chart-pie mt-1" style="color: var(--accent); font-size: 1.25rem;"></i>
+      <div>
+        <p class="mb-1" style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">
+          Market Position: <span class="badge-glass badge-purple">{{ summary.position }}</span>
+          <span class="mx-2" style="color: var(--text-secondary);">|</span>
+          Competition: <span class="badge-glass {% if summary.competition_level == 'Hyper-Competitive' %}badge-danger{% elif summary.competition_level == 'Competitive' %}badge-warning{% else %}badge-success{% endif %}">
+            {{ summary.competition_level }}
+          </span>
+        </p>
+        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+          {{ summary.position_desc }} {{ summary.competition_desc }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Total Addressable Market</div>
+        <div class="metric-value">{{ currency_symbol }}{{ "{:,.0f}".format(summary.tam) }}</div>
+        <div class="metric-sub">Global market ceiling</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Serviceable Market (SAM)</div>
+        <div class="metric-value">{{ currency_symbol }}{{ "{:,.0f}".format(summary.sam) }}</div>
+        <div class="metric-sub">Realistically reachable</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Market Growth Rate</div>
+        <div class="metric-value" style="color: {% if summary.growth_rate > 8 %}var(--success){% elif summary.growth_rate > 4 %}var(--warning){% else %}var(--text-primary){% endif %};">
+          {{ "{:.1f}%".format(summary.growth_rate) }}
+        </div>
+        <div class="metric-sub">Year-over-year</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Your Market Share</div>
+        <div class="metric-value" style="color: {% if summary.market_share_pct < 0.001 %}var(--danger){% elif summary.market_share_pct < 0.01 %}var(--warning){% else %}var(--success){% endif %};">
+          {{ "{:.4f}%".format(summary.market_share_pct) }}
+        </div>
+        <div class="metric-sub">Of TAM</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secondary Metrics -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="metric-label">LTV / CAC Ratio</span>
+          <span class="badge-glass {% if summary.ltv_cac_ratio > 3 %}badge-success{% elif summary.ltv_cac_ratio > 1 %}badge-warning{% else %}badge-danger{% endif %}">
+            {{ "{:.1f}x".format(summary.ltv_cac_ratio) }}
+          </span>
+        </div>
+        {% set ltv_width = summary.ltv_cac_ratio / 5 * 100 %}
+        {% if ltv_width > 100 %}{% set ltv_width = 100 %}{% endif %}
+        <div class="progress-track mb-2">
+          <div class="progress-fill" style="width: {{ ltv_width }}%; background: {% if summary.ltv_cac_ratio > 3 %}var(--success){% elif summary.ltv_cac_ratio > 1 %}var(--warning){% else %}var(--danger){% endif %};"></div>
+        </div>
+        <div class="metric-sub">Industry benchmark comparison</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="metric-label">vs. Avg Competitor</span>
+          <span class="badge-glass {% if summary.vs_competitor_pct > 100 %}badge-success{% elif summary.vs_competitor_pct > 50 %}badge-warning{% else %}badge-danger{% endif %}">
+            {{ "{:.0f}%".format(summary.vs_competitor_pct) }}
+          </span>
+        </div>
+        {% set comp_width = summary.vs_competitor_pct %}
+        {% if comp_width > 100 %}{% set comp_width = 100 %}{% endif %}
+        <div class="progress-track mb-2">
+          <div class="progress-fill" style="width: {{ comp_width }}%; background: {% if summary.vs_competitor_pct > 100 %}var(--success){% elif summary.vs_competitor_pct > 50 %}var(--warning){% else %}var(--danger){% endif %};"></div>
+        </div>
+        <div class="metric-sub">Your revenue relative to industry average</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="metric-label">SAM Penetration</span>
+          <span class="badge-glass {% if summary.sam_share_pct > 5 %}badge-success{% elif summary.sam_share_pct > 1 %}badge-warning{% else %}badge-info{% endif %}">
+            {{ "{:.2f}%".format(summary.sam_share_pct) }}
+          </span>
+        </div>
+        {% set sam_width = summary.sam_share_pct * 10 %}
+        {% if sam_width > 100 %}{% set sam_width = 100 %}{% endif %}
+        <div class="progress-track mb-2">
+          <div class="progress-fill" style="width: {{ sam_width }}%; background: {% if summary.sam_share_pct > 5 %}var(--success){% elif summary.sam_share_pct > 1 %}var(--warning){% else %}var(--info){% endif %};"></div>
+        </div>
+        <div class="metric-sub">Share of serviceable market</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strategic Insights -->
+  <div class="glass-card p-4 mb-4">
+    <h5 class="section-title"><i class="fas fa-lightbulb me-2" style="color: var(--warning);"></i>Strategic Insights</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="insight-banner" style="border-left-color: var(--success); background: rgba(16, 185, 129, 0.05);">
+          <p class="mb-1" style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">
+            <i class="fas fa-arrow-trend-up me-2" style="color: var(--success);"></i>Growth Opportunity
+          </p>
+          <p class="mb-0" style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">
+            {{ summary.growth_opportunity }}
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="insight-banner" style="border-left-color: var(--info); background: rgba(59, 130, 246, 0.05);">
+          <p class="mb-1" style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">
+            <i class="fas fa-bullseye me-2" style="color: var(--info);"></i>Competitive Landscape
+          </p>
+          <p class="mb-0" style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">
+            {{ summary.competition_desc }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Market Data Table -->
+  <div class="glass-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="section-title m-0"><i class="fas fa-table me-2" style="color: var(--accent);"></i>Market Benchmarks</h5>
+      <span class="badge-glass badge-info">{{ market_data|length }} metrics</span>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table-glass">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Market / Industry</th>
+            <th>Region</th>
+            <th class="text-end">Value</th>
+            <th>Period</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for m in market_data %}
+        <tr>
+          <td style="font-weight: 600;">
+            <i class="fas fa-chart-bar me-2" style="color: var(--accent); opacity: 0.6;"></i>
+            {{ m.metric_name }}
+          </td>
+          <td>
+            <span class="badge-glass badge-info" style="font-size: 0.7rem;">
+              {{ m.industry or m.market_name or '-' }}
+            </span>
+          </td>
+          <td style="color: var(--text-secondary);">{{ m.region or '-' }}</td>
+          <td class="text-end" style="font-weight: 700;">
+            {% if m.currency and m.metric_value %}
+              {{ currency_symbol }}{{ "{:,.0f}".format(m.metric_value) }}
+            {% elif m.metric_value and (m.metric_value < 1 or m.metric_value > 1000) %}
+              {{ "{:,.2f}".format(m.metric_value) }}
+            {% elif m.metric_value %}
+              {{ "{:.2f}".format(m.metric_value) }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ m.period or '-' }}</td>
+          <td style="color: var(--text-secondary); font-size: 0.8rem; max-width: 200px;" class="text-truncate">
+            {{ m.source or 'Internal' }}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-2" style="font-size: 0.75rem; color: var(--text-secondary);">
+      <i class="fas fa-circle-info me-1"></i>
+      Values are auto-generated industry benchmarks. Click "Refresh Benchmarks" to recalibrate, or use "Import Data" to load your own market research.
+    </div>
+  </div>
+  {% else %}
+  <!-- Fallback if somehow still empty -->
+  <div class="glass-card p-4">
+    <div class="empty-state">
+      <i class="fas fa-globe mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+      <p class="mb-2" style="font-weight: 600; color: var(--text-primary);">No market data available</p>
+      <p class="mb-3" style="font-size: 0.875rem;">Click the button below to generate industry benchmarks for your company.</p>
+      <form method="POST" action="{{ url_for('market_intelligence.refresh') }}">
+        <button type="submit" class="btn-glass">
+          <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Market Benchmarks
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Import Panel -->
+  <div class="collapse mt-4" id="importPanel">
+    <div class="glass-card p-4">
+      <h5 class="section-title"><i class="fas fa-upload me-2" style="color: var(--accent);"></i>Import Market Data</h5>
+      <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">
+        Paste JSON array of market data records below. Each record should include: 
+        <code>metric_name</code>, <code>metric_value</code>, and optionally 
+        <code>market_name</code>, <code>industry</code>, <code>region</code>, <code>period</code>.
+      </p>
+      <form method="POST" action="{{ url_for('market_intelligence.import_data') }}">
+        <div class="mb-3">
+          <textarea class="form-control-glass" name="import_data" rows="6" placeholder='[
+  {"metric_name": "Competitor Pricing", "metric_value": 99.99, "market_name": "SaaS", "region": "US"},
+  {"metric_name": "Ad Spend Benchmark", "metric_value": 45000, "market_name": "Digital", "region": "Global"}
+]'></textarea>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn-glass">
+            <i class="fas fa-file-import me-2"></i>Import Records
+          </button>
+          <button type="button" class="btn-outline-glass" data-bs-toggle="collapse" data-bs-target="#importPanel">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

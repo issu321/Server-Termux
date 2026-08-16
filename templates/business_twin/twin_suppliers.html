@@ -1,0 +1,745 @@
+{% extends "base.html" %}
+{% block title %}Supplier Twin{% endblock %}
+{% block page_title %}Supplier Twin{% endblock %}
+{% block content %}
+
+<!-- Supplier Stats Cards -->
+<div class="stats-grid mb-4">
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: var(--accent-primary);">
+            {{ total_db_suppliers }}
+        </div>
+        <small style="color: var(--text-secondary);">Total Suppliers</small>
+    </div>
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: #10B981;">
+            {{ active_count }}
+        </div>
+        <small style="color: var(--text-secondary);">Active Suppliers</small>
+    </div>
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: #8B5CF6;">
+            {{ primary_count }}
+        </div>
+        <small style="color: var(--text-secondary);">Primary Suppliers</small>
+    </div>
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: #F59E0B;">
+            {% if total_db_suppliers > 0 %}
+                {{ "%.1f"|format(avg_rating) }}
+            {% else %}
+                0.0
+            {% endif %}
+        </div>
+        <small style="color: var(--text-secondary);">Avg Rating</small>
+    </div>
+    <div class="glass-card p-4 text-center">
+        <div style="font-size: 32px; font-weight: 700; color: #EF4444;">
+            {% if total_db_suppliers > 0 %}
+                {{ total_spend | format_currency }}
+            {% else %}
+                {{ 0 | format_currency }}
+            {% endif %}
+        </div>
+        <small style="color: var(--text-secondary);">Total Spend</small>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+    <button class="btn-glass" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+        <i class="fas fa-plus me-2"></i>Add Supplier
+    </button>
+    <button class="btn-glass" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+        <i class="fas fa-upload me-2"></i>Import CSV
+    </button>
+    <button class="btn-glass" style="background: linear-gradient(135deg, #10B981, #059669);" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+        <i class="fas fa-file-excel me-2"></i>Import Excel
+    </button>
+    <a href="{{ url_for('business_twin.download_supplier_csv_template') }}" class="btn btn-outline-glass">
+        <i class="fas fa-download me-2"></i>CSV Template
+    </a>
+    <a href="{{ url_for('business_twin.download_supplier_excel_template') }}" class="btn btn-outline-glass">
+        <i class="fas fa-file-excel me-2"></i>Excel Template
+    </a>
+    <a href="{{ url_for('business_twin.export_suppliers_excel') }}" class="btn btn-outline-glass">
+        <i class="fas fa-file-excel me-2"></i>Export Excel
+    </a>
+    <a href="{{ url_for('business_twin.export_suppliers_pdf') }}" class="btn btn-outline-glass">
+        <i class="fas fa-file-pdf me-2"></i>Export PDF
+    </a>
+    <button class="btn btn-outline-glass" style="border-color: #EF4444; color: #EF4444;" onclick="deleteAllSuppliers()">
+        <i class="fas fa-trash-alt me-2"></i>Delete All Records
+    </button>
+</div>
+
+<!-- Supplier Database Table -->
+<div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 600;">Supplier Database</h5>
+        <span class="badge-glass badge-info">
+            {{ total_db_suppliers }} suppliers
+        </span>
+    </div>
+
+    {% if total_db_suppliers == 0 %}
+    <div class="text-center py-5">
+        <i class="fas fa-truck" style="font-size: 48px; color: var(--text-secondary); opacity: 0.3;"></i>
+        <p class="mt-3" style="color: var(--text-secondary);">No supplier records in database yet.</p>
+        <div class="mt-3">
+            <button class="btn-glass me-2" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                <i class="fas fa-plus me-2"></i>Add First Supplier
+            </button>
+            <button class="btn btn-outline-glass me-2" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+                <i class="fas fa-upload me-2"></i>Import from CSV
+            </button>
+            <button class="btn btn-outline-glass" style="border-color: #10B981; color: #10B981;" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                <i class="fas fa-file-excel me-2"></i>Import from Excel
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table-glass">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contact Person</th>
+                    <th>Email</th>
+                    <th>Category</th>
+                    <th>Lead Time</th>
+                    <th>Rating</th>
+                    <th>Total Spend</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th style="width: 100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for s in suppliers %}
+            <tr>
+                <td style="font-weight: 500;">{{ s.name or '-' }}</td>
+                <td>{{ s.contact_person or '-' }}</td>
+                <td><small>{{ s.email or '-' }}</small></td>
+                <td><span class="badge-glass badge-info">{{ s.category or 'General' }}</span></td>
+                <td>{{ s.lead_time_days or 0 }} days</td>
+                <td>
+                    {% if s.rating %}
+                    <span class="badge-glass {% if s.rating >= 4 %}badge-success{% elif s.rating >= 3 %}badge-warning{% else %}badge-danger{% endif %}">
+                        {{ "%.1f"|format(s.rating) }}
+                    </span>
+                    {% else %}-{% endif %}
+                </td>
+                <td>{{ s.total_spend | format_currency }}</td>
+                <td>
+                    {% if s.is_primary %}
+                    <span class="badge-glass badge-success">Primary</span>
+                    {% else %}
+                    <span class="badge-glass badge-info">Secondary</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge-glass {% if s.status == 'active' %}badge-success{% elif s.status == 'inactive' %}badge-warning{% else %}badge-danger{% endif %}">
+                        {{ s.status|title }}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-glass me-1" onclick="openEditModal({{ s.to_dict()|tojson|safe }})" title="Edit">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-glass" style="border-color: #EF4444; color: #EF4444;" onclick="deleteSupplier({{ s.id }}, {{ (s.name or '')|tojson }})" title="Delete">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Supplier Modal -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-plus me-2" style="color: var(--accent-primary);"></i>Add New Supplier</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <form id="addSupplierForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Supplier Name *</label>
+                            <input type="text" class="form-control-glass" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Contact Person</label>
+                            <input type="text" class="form-control-glass" name="contact_person">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</label>
+                            <input type="email" class="form-control-glass" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Phone</label>
+                            <input type="text" class="form-control-glass" name="phone">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Address</label>
+                            <textarea class="form-control-glass" name="address" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">City</label>
+                            <input type="text" class="form-control-glass" name="city">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Country</label>
+                            <input type="text" class="form-control-glass" name="country">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Category</label>
+                            <select class="form-control-glass" name="category">
+                                <option value="General">General</option>
+                                <option value="Raw Materials">Raw Materials</option>
+                                <option value="IT Services">IT Services</option>
+                                <option value="Logistics">Logistics</option>
+                                <option value="Manufacturing">Manufacturing</option>
+                                <option value="Office Supplies">Office Supplies</option>
+                                <option value="Professional Services">Professional Services</option>
+                                <option value="Software">Software</option>
+                                <option value="Hardware">Hardware</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Payment Terms</label>
+                            <input type="text" class="form-control-glass" name="payment_terms" placeholder="e.g. Net 30">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Lead Time (days)</label>
+                            <input type="number" class="form-control-glass" name="lead_time_days" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Rating (0-5)</label>
+                            <input type="number" class="form-control-glass" name="rating" min="0" max="5" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Spend ({{ currency_symbol }})</label>
+                            <input type="number" class="form-control-glass" name="total_spend" value="0" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Quality Score (0-5)</label>
+                            <input type="number" class="form-control-glass" name="quality_score" min="0" max="5" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Reliability Score (0-5)</label>
+                            <input type="number" class="form-control-glass" name="reliability_score" min="0" max="5" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cost Rating (0-5)</label>
+                            <input type="number" class="form-control-glass" name="cost_rating" min="0" max="5" step="0.1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Contract Start</label>
+                            <input type="date" class="form-control-glass" name="contract_start">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Contract End</label>
+                            <input type="date" class="form-control-glass" name="contract_end">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                            <select class="form-control-glass" name="status">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="blacklisted">Blacklisted</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Supplier Type</label>
+                            <select class="form-control-glass" name="is_primary">
+                                <option value="false">Secondary</option>
+                                <option value="true">Primary</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitSupplier()">
+                    <i class="fas fa-save me-2"></i>Save Supplier
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Supplier Modal -->
+<div class="modal fade" id="editSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-pencil-alt me-2" style="color: var(--accent-primary);"></i>Edit Supplier</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <form id="editSupplierForm">
+                    <input type="hidden" name="supplier_id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Supplier Name *</label>
+                            <input type="text" class="form-control-glass" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Contact Person</label>
+                            <input type="text" class="form-control-glass" name="contact_person">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</label>
+                            <input type="email" class="form-control-glass" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Phone</label>
+                            <input type="text" class="form-control-glass" name="phone">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Address</label>
+                            <textarea class="form-control-glass" name="address" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">City</label>
+                            <input type="text" class="form-control-glass" name="city">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Country</label>
+                            <input type="text" class="form-control-glass" name="country">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Category</label>
+                            <select class="form-control-glass" name="category">
+                                <option value="General">General</option>
+                                <option value="Raw Materials">Raw Materials</option>
+                                <option value="IT Services">IT Services</option>
+                                <option value="Logistics">Logistics</option>
+                                <option value="Manufacturing">Manufacturing</option>
+                                <option value="Office Supplies">Office Supplies</option>
+                                <option value="Professional Services">Professional Services</option>
+                                <option value="Software">Software</option>
+                                <option value="Hardware">Hardware</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Payment Terms</label>
+                            <input type="text" class="form-control-glass" name="payment_terms" placeholder="e.g. Net 30">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Lead Time (days)</label>
+                            <input type="number" class="form-control-glass" name="lead_time_days" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Rating (0-5)</label>
+                            <input type="number" class="form-control-glass" name="rating" min="0" max="5" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Spend ({{ currency_symbol }})</label>
+                            <input type="number" class="form-control-glass" name="total_spend" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Quality Score (0-5)</label>
+                            <input type="number" class="form-control-glass" name="quality_score" min="0" max="5" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Reliability Score (0-5)</label>
+                            <input type="number" class="form-control-glass" name="reliability_score" min="0" max="5" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cost Rating (0-5)</label>
+                            <input type="number" class="form-control-glass" name="cost_rating" min="0" max="5" step="0.1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Contract Start</label>
+                            <input type="date" class="form-control-glass" name="contract_start">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Contract End</label>
+                            <input type="date" class="form-control-glass" name="contract_end">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                            <select class="form-control-glass" name="status">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="blacklisted">Blacklisted</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Supplier Type</label>
+                            <select class="form-control-glass" name="is_primary">
+                                <option value="false">Secondary</option>
+                                <option value="true">Primary</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitEditSupplier()">
+                    <i class="fas fa-save me-2"></i>Update Supplier
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import CSV Modal -->
+<div class="modal fade" id="importCsvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-file-csv me-2" style="color: #10B981;"></i>Import Suppliers from CSV</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div class="alert alert-info mb-3" style="background: rgba(0,212,255,0.05); border: 1px solid var(--accent-primary); color: var(--text-primary); border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Required column:</strong> name<br>
+                    <strong>Upsert logic:</strong> matches by email (or by name if email is empty). If found, updates all fields; if not found, creates a new record.<br>
+                    <strong>Optional:</strong> contact_person, email, phone, address, city, country, category, payment_terms, lead_time_days, rating, quality_score, reliability_score, cost_rating, total_spend, total_orders, is_primary, status, contract_start, contract_end<br>
+                    <a href="{{ url_for('business_twin.download_supplier_csv_template') }}" style="color: var(--accent-primary);"><i class="fas fa-download me-1"></i>Download CSV template</a>
+                </div>
+                <form id="importCsvForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Select CSV File</label>
+                        <input type="file" class="form-control-glass" name="csv_file" accept=".csv" required>
+                    </div>
+                </form>
+                <div id="importResult" style="display: none;"></div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitCsvImport()">
+                    <i class="fas fa-upload me-2"></i>Import
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Excel Modal -->
+<div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-file-excel me-2" style="color: #10B981;"></i>Import Suppliers from Excel</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div class="alert alert-info mb-3" style="background: rgba(16,185,129,0.05); border: 1px solid #10B981; color: var(--text-primary); border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-info-circle me-2" style="color: #10B981;"></i>
+                    <strong>Required column:</strong> name<br>
+                    <strong>Upsert logic:</strong> matches by email (or by name if email is empty). If found, updates all fields; if not found, creates a new record.<br>
+                    <strong>Optional:</strong> contact_person, email, phone, address, city, country, category, payment_terms, lead_time_days, rating, quality_score, reliability_score, cost_rating, total_spend, total_orders, is_primary, status, contract_start, contract_end<br>
+                    <strong>Supported:</strong> .xlsx and .xls files<br>
+                    <a href="{{ url_for('business_twin.download_supplier_excel_template') }}" style="color: #10B981;"><i class="fas fa-download me-1"></i>Download Excel template</a>
+                </div>
+                <form id="importExcelForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Select Excel File (.xlsx)</label>
+                        <input type="file" class="form-control-glass" name="excel_file" accept=".xlsx,.xls" required>
+                    </div>
+                </form>
+                <div id="importExcelResult" style="display: none;"></div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" style="background: linear-gradient(135deg, #10B981, #059669);" onclick="submitExcelImport()">
+                    <i class="fas fa-upload me-2"></i>Import Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const baseEditUrl = '{{ url_for("business_twin.edit_supplier", supplier_id=0) }}';
+const baseDeleteUrl = '{{ url_for("business_twin.delete_supplier", supplier_id=0) }}';
+const deleteAllUrl = '{{ url_for("business_twin.delete_all_suppliers") }}';
+
+function openEditModal(supplier) {
+    const form = document.getElementById('editSupplierForm');
+    form.querySelector('[name="supplier_id"]').value = supplier.id || '';
+    form.querySelector('[name="name"]').value = supplier.name || '';
+    form.querySelector('[name="contact_person"]').value = supplier.contact_person || '';
+    form.querySelector('[name="email"]').value = supplier.email || '';
+    form.querySelector('[name="phone"]').value = supplier.phone || '';
+    form.querySelector('[name="address"]').value = supplier.address || '';
+    form.querySelector('[name="city"]').value = supplier.city || '';
+    form.querySelector('[name="country"]').value = supplier.country || '';
+    form.querySelector('[name="category"]').value = supplier.category || 'General';
+    form.querySelector('[name="payment_terms"]').value = supplier.payment_terms || '';
+    form.querySelector('[name="lead_time_days"]').value = supplier.lead_time_days || 0;
+    form.querySelector('[name="rating"]').value = supplier.rating || '';
+    form.querySelector('[name="quality_score"]').value = supplier.quality_score || '';
+    form.querySelector('[name="reliability_score"]').value = supplier.reliability_score || '';
+    form.querySelector('[name="cost_rating"]').value = supplier.cost_rating || '';
+    form.querySelector('[name="total_spend"]').value = supplier.total_spend || 0;
+    form.querySelector('[name="status"]').value = supplier.status || 'active';
+    form.querySelector('[name="is_primary"]').value = supplier.is_primary ? 'true' : 'false';
+
+    if (supplier.contract_start) {
+        form.querySelector('[name="contract_start"]').value = supplier.contract_start.split('T')[0];
+    } else {
+        form.querySelector('[name="contract_start"]').value = '';
+    }
+    if (supplier.contract_end) {
+        form.querySelector('[name="contract_end"]').value = supplier.contract_end.split('T')[0];
+    } else {
+        form.querySelector('[name="contract_end"]').value = '';
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
+    modal.show();
+}
+
+function submitSupplier() {
+    const form = document.getElementById('addSupplierForm');
+    const formData = new FormData(form);
+
+    fetch('{{ url_for("business_twin.add_supplier") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Supplier added successfully!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addSupplierModal'));
+            modal.hide();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error adding supplier', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function submitEditSupplier() {
+    const form = document.getElementById('editSupplierForm');
+    const formData = new FormData(form);
+    const supplierId = form.querySelector('[name="supplier_id"]').value;
+    const url = baseEditUrl.replace(/\/0$/, '/' + supplierId);
+
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Supplier updated successfully!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editSupplierModal'));
+            modal.hide();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error updating supplier', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function deleteSupplier(supplierId, supplierName) {
+    if (!confirm('Are you sure you want to delete "' + supplierName + '"? This action cannot be undone.')) {
+        return;
+    }
+    const url = baseDeleteUrl.replace(/\/0$/, '/' + supplierId);
+
+    fetch(url, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Supplier deleted', 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error deleting supplier', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function deleteAllSuppliers() {
+    if (!confirm('WARNING: This will permanently delete ALL supplier records for your company. Are you absolutely sure?')) {
+        return;
+    }
+
+    fetch(deleteAllUrl, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error deleting suppliers', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function submitCsvImport() {
+    const form = document.getElementById('importCsvForm');
+    const formData = new FormData(form);
+
+    fetch('{{ url_for("business_twin.import_suppliers_csv") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        const resultDiv = document.getElementById('importResult');
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success mt-3" style="background: rgba(16,185,129,0.1); border: 1px solid #10B981; color: #10B981; border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-check-circle me-2"></i>${data.message}
+                    ${data.errors && data.errors.length > 0 ? '<br><small>Errors: ' + data.errors.join(', ') + '</small>' : ''}
+                </div>`;
+            resultDiv.style.display = 'block';
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger mt-3" style="background: rgba(239,68,68,0.1); border: 1px solid #EF4444; color: #EF4444; border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-exclamation-circle me-2"></i>${data.error || 'Import failed'}
+                </div>`;
+            resultDiv.style.display = 'block';
+        }
+    })
+    .catch(err => {
+        showToast('Import error: ' + err.message, 'error');
+    });
+}
+
+function submitExcelImport() {
+    const form = document.getElementById('importExcelForm');
+    const formData = new FormData(form);
+
+    fetch('{{ url_for("business_twin.import_suppliers_excel") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        const resultDiv = document.getElementById('importExcelResult');
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success mt-3" style="background: rgba(16,185,129,0.1); border: 1px solid #10B981; color: #10B981; border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-check-circle me-2"></i>${data.message}
+                    ${data.errors && data.errors.length > 0 ? '<br><small>Errors: ' + data.errors.join(', ') + '</small>' : ''}
+                </div>`;
+            resultDiv.style.display = 'block';
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger mt-3" style="background: rgba(239,68,68,0.1); border: 1px solid #EF4444; color: #EF4444; border-radius: 12px; padding: 16px;">
+                    <i class="fas fa-exclamation-circle me-2"></i>${data.error || 'Excel import failed'}
+                </div>`;
+            resultDiv.style.display = 'block';
+        }
+    })
+    .catch(err => {
+        showToast('Excel import error: ' + err.message, 'error');
+    });
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        padding: 12px 24px; border-radius: 8px; font-weight: 500;
+        background: ${type === 'success' ? 'rgba(16,185,129,0.9)' : 'rgba(239,68,68,0.9)'};
+        color: white; backdrop-filter: blur(10px);
+        animation: slideIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+<style>
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.modal-backdrop-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.modal.show .modal-backdrop-custom,
+.modal.fade.show .modal-backdrop-custom {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-dialog {
+    z-index: 1050;
+    position: relative;
+}
+
+.modal-backdrop {
+    display: none !important;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+.form-label {
+    margin-bottom: 6px;
+    display: block;
+}
+
+.modal-content .form-control-glass {
+    background: rgba(255,255,255,0.05);
+}
+
+.modal-content .form-control-glass:focus {
+    background: rgba(255,255,255,0.08);
+}
+</style>
+{% endblock %}

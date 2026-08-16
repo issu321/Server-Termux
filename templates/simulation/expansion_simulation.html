@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block title %}{{ sim_label }}{% endblock %}
+{% block page_title %}{{ sim_label }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="glass-card p-4">
+            <h5 class="mb-4" style="font-weight: 600;">Simulation Parameters</h5>
+            <form method="POST" id="simForm">
+                <input type="hidden" name="name" value="{{ sim_label }} - {{ now }}">
+
+                {% if sim_type == 'new_branch' %}
+                <div class="mb-3"><label class="form-label">Location</label><input type="text" class="form-control-glass" name="location" placeholder="e.g. Austin, TX" required></div>
+                <div class="mb-3"><label class="form-label">Monthly Rent ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="rent_monthly" value="5000" required></div>
+                <div class="mb-3"><label class="form-label">Staff Count</label><input type="number" class="form-control-glass" name="staff_count" value="5" required></div>
+                <div class="mb-3"><label class="form-label">Setup Cost ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="setup_cost" value="50000" required></div>
+                <div class="mb-3"><label class="form-label">Expected Customers/Month</label><input type="number" class="form-control-glass" name="expected_customers" value="100" required></div>
+
+                {% elif sim_type == 'warehouse_expansion' %}
+                <div class="mb-3"><label class="form-label">Location</label><input type="text" class="form-control-glass" name="location" placeholder="e.g. Austin, TX" required></div>
+                <div class="mb-3"><label class="form-label">Size (sq ft)</label><input type="number" class="form-control-glass" name="size_sqft" value="10000" required></div>
+                <div class="mb-3"><label class="form-label">Monthly Cost ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="monthly_cost" value="8000" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Automation Level</label>
+                    <select class="form-control-glass" name="automation_level">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Staff Count</label><input type="number" class="form-control-glass" name="staff_count" value="3" required></div>
+
+                {% elif sim_type == 'international_expansion' %}
+                <div class="mb-3"><label class="form-label">Target Country</label><input type="text" class="form-control-glass" name="target_country" placeholder="e.g. Germany" required></div>
+                <div class="mb-3"><label class="form-label">Market Size</label><input type="number" class="form-control-glass" name="market_size" value="50000" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Entry Mode</label>
+                    <select class="form-control-glass" name="entry_mode">
+                        <option value="partnership">Partnership</option>
+                        <option value="franchise">Franchise</option>
+                        <option value="wholly_owned">Wholly Owned</option>
+                        <option value="export">Export Only</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Investment ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="investment" value="200000" required></div>
+                <div class="mb-3"><label class="form-label">Local Partners</label><input type="text" class="form-control-glass" name="local_partners" placeholder="e.g. ABC Corp"></div>
+
+                {% elif sim_type == 'product_launch' %}
+                <div class="mb-3">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-control-glass" name="product_name" placeholder="e.g. Smart Widget Pro" required>
+                </div>
+                <div class="mb-3"><label class="form-label">R&D Cost ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="rd_cost" value="100000" required></div>
+                <div class="mb-3"><label class="form-label">Marketing Budget ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="marketing_budget" value="50000" required></div>
+                <div class="mb-3"><label class="form-label">Launch Timeline (months)</label><input type="number" class="form-control-glass" name="launch_months" value="6" required></div>
+                <div class="mb-3"><label class="form-label">Target Market Size</label><input type="number" class="form-control-glass" name="target_market_size" value="10000" required></div>
+
+                {% elif sim_type == 'inventory_expansion' %}
+                <div class="mb-3"><label class="form-label">New SKUs</label><input type="number" class="form-control-glass" name="new_skus" value="5" required></div>
+                <div class="mb-3"><label class="form-label">Quantity per SKU</label><input type="number" class="form-control-glass" name="quantity_per_sku" value="100" required></div>
+                <div class="mb-3"><label class="form-label">Unit Cost ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="unit_cost" value="50" step="0.01" required></div>
+                <div class="mb-3"><label class="form-label">Warehouse Monthly Cost ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="warehouse_cost" value="2000" required></div>
+
+                {% elif sim_type == 'marketing_campaign' %}
+                <div class="mb-3">
+                    <label class="form-label">Channel</label>
+                    <select class="form-control-glass" name="channel">
+                        <option value="social_media">Social Media</option>
+                        <option value="search">Search Ads</option>
+                        <option value="email">Email Marketing</option>
+                        <option value="display">Display Ads</option>
+                        <option value="tv">TV/Radio</option>
+                        <option value="influencer">Influencer</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Budget ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="budget" value="10000" required></div>
+                <div class="mb-3"><label class="form-label">Duration (days)</label><input type="number" class="form-control-glass" name="duration_days" value="30" required></div>
+                <div class="mb-3"><label class="form-label">Target Audience</label><input type="text" class="form-control-glass" name="target_audience" placeholder="e.g. Millennials"></div>
+                <div class="mb-3"><label class="form-label">Expected CTR (%)</label><input type="number" class="form-control-glass" name="expected_ctr" value="2.5" step="0.1"></div>
+
+                {% elif sim_type == 'market_crash' %}
+                <div class="mb-3">
+                    <label class="form-label">Severity</label>
+                    <select class="form-control-glass" name="severity">
+                        <option value="mild">Mild</option>
+                        <option value="moderate" selected>Moderate</option>
+                        <option value="severe">Severe</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Duration (months)</label><input type="number" class="form-control-glass" name="duration_months" value="6" required></div>
+                <div class="mb-3"><label class="form-label">Affected Sectors</label><input type="text" class="form-control-glass" name="affected_sectors" placeholder="e.g. Technology, Finance"></div>
+
+                {% elif sim_type == 'economic_recession' %}
+                <div class="mb-3">
+                    <label class="form-label">Severity</label>
+                    <select class="form-control-glass" name="severity">
+                        <option value="mild">Mild</option>
+                        <option value="moderate" selected>Moderate</option>
+                        <option value="severe">Severe</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Duration (months)</label><input type="number" class="form-control-glass" name="duration_months" value="12" required></div>
+                <div class="mb-3"><label class="form-label">Industry Impact</label><input type="text" class="form-control-glass" name="industry_impact" placeholder="e.g. High for retail"></div>
+
+                {% elif sim_type == 'customer_growth' %}
+                <div class="mb-3"><label class="form-label">Growth Rate (%)</label><input type="number" class="form-control-glass" name="growth_rate" value="10" step="0.1" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Acquisition Channels</label>
+                    <select class="form-control-glass" name="acquisition_channels">
+                        <option value="organic">Organic</option>
+                        <option value="paid">Paid Ads</option>
+                        <option value="referral">Referral</option>
+                        <option value="partnership">Partnership</option>
+                        <option value="all">All Channels</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Retention Improvement (%)</label><input type="number" class="form-control-glass" name="retention_improvement" value="5" step="0.1"></div>
+
+                {% elif sim_type == 'demand_growth' %}
+                <div class="mb-3"><label class="form-label">Demand Increase (%)</label><input type="number" class="form-control-glass" name="demand_increase_percent" value="20" step="0.1" required></div>
+                <div class="mb-3"><label class="form-label">Product Lines</label><input type="number" class="form-control-glass" name="product_lines" value="3" required></div>
+                <div class="mb-3"><label class="form-label">Seasonality Factor</label><input type="number" class="form-control-glass" name="seasonality_factor" value="1.0" step="0.1"></div>
+
+                {% elif sim_type == 'supply_disruption' %}
+                <div class="mb-3">
+                    <label class="form-label">Disruption Type</label>
+                    <select class="form-control-glass" name="disruption_type">
+                        <option value="supplier_bankruptcy">Supplier Bankruptcy</option>
+                        <option value="natural_disaster">Natural Disaster</option>
+                        <option value="logistics_failure">Logistics Failure</option>
+                        <option value="quality_recall">Quality Recall</option>
+                        <option value="trade_war">Trade War</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Duration (weeks)</label><input type="number" class="form-control-glass" name="duration_weeks" value="4" required></div>
+                <div class="mb-3"><label class="form-label">Affected Suppliers</label><input type="number" class="form-control-glass" name="affected_suppliers" value="1" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Backup Available</label>
+                    <select class="form-control-glass" name="backup_available">
+                        <option value="yes" selected>Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+
+                {% elif sim_type == 'competitor_entry' %}
+                <div class="mb-3">
+                    <label class="form-label">Competitor Type</label>
+                    <select class="form-control-glass" name="competitor_type">
+                        <option value="new_startup">New Startup</option>
+                        <option value="regional_player">Regional Player</option>
+                        <option value="major_corporation">Major Corporation</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Target Segment</label><input type="text" class="form-control-glass" name="target_segment" placeholder="e.g. Enterprise"></div>
+                <div class="mb-3">
+                    <label class="form-label">Pricing Strategy</label>
+                    <select class="form-control-glass" name="pricing_strategy">
+                        <option value="aggressive">Aggressive</option>
+                        <option value="moderate">Moderate</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Marketing Spend ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="marketing_spend" value="50000"></div>
+                {% endif %}
+
+                <button type="submit" class="btn-glass w-100"><i class="fas fa-play me-2"></i>Run Simulation</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="glass-card p-4" id="resultsCard" style="display: none;"><h5 class="mb-3" style="font-weight: 600;">Simulation Results</h5><div id="resultsContent"></div></div>
+        <div class="glass-card p-4" id="placeholderCard">
+            <div class="text-center py-5">
+                <i class="fas fa-chart-area mb-3" style="font-size: 48px; color: var(--accent-primary); opacity: 0.5;"></i>
+                <p style="color: var(--text-secondary);">Configure parameters and run the simulation to see results</p>
+                {% if baseline %}
+                <small style="color: var(--text-secondary);">
+                    Company baseline: Revenue {{ currency_symbol }}{{ "{:,.0f}".format(baseline.revenue) }}/yr, 
+                    {{ baseline.employees }} employees, {{ baseline.customers }} customers
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<script src="{{ url_for('static', filename='js/simulation_formatter.js') }}"></script>
+<script>
+// FIX: Format break-even value properly (handles strings like "Never", numbers, etc.)
+function fmtBreakEven(val) {
+    if (val === undefined || val === null) return 'N/A';
+    if (typeof val === 'string') return val;  // "Never", "> 10 years"
+    if (isNaN(val)) return 'N/A';
+    const num = parseFloat(val);
+    if (num <= 0) return 'Immediate';
+    if (num < 12) return num.toFixed(1) + ' months';
+    const years = num / 12;
+    if (years < 1) return num.toFixed(1) + ' months';
+    return years.toFixed(1) + ' years (' + num.toFixed(0) + ' months)';
+}
+
+document.getElementById('simForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(window.location.pathname, {method: 'POST', body: new FormData(this), headers: {'X-Requested-With': 'XMLHttpRequest'}})
+    .then(r => r.json()).then(data => {
+        if(data.success && data.simulation) {
+            const s = data.simulation;
+            document.getElementById('placeholderCard').style.display = 'none';
+            document.getElementById('resultsCard').style.display = 'block';
+
+            let extraCards = '';
+            const metrics = [];
+            const v = (k) => getSimValue(s, k);
+
+            if (v('break_even_months') !== undefined) {
+                const be = v('break_even_months');
+                let beColor = '#10B981';
+                if (typeof be === 'number') {
+                    if (be > 36) beColor = '#EF4444';
+                    else if (be > 12) beColor = '#F59E0B';
+                }
+                metrics.push({label: 'Break-even', value: fmtBreakEven(be), color: beColor});
+            }
+            if (v('annual_cost') !== undefined) metrics.push({label: 'Annual Cost', value: fmtMoney(v('annual_cost')), color: '#F59E0B'});
+            if (v('new_revenue') !== undefined) metrics.push({label: 'New Revenue', value: fmtMoney(v('new_revenue')), color: '#10B981'});
+            if (v('roi_pct') !== undefined) metrics.push({label: 'ROI', value: fmtNum(v('roi_pct'), 1) + '%', color: '#10B981'});
+            if (v('market_penetration') !== undefined) metrics.push({label: 'Market Penetration', value: fmtNum(v('market_penetration'), 1) + '%', color: '#3B82F6'});
+            if (v('total_investment') !== undefined) metrics.push({label: 'Total Investment', value: fmtMoney(v('total_investment')), color: '#F59E0B'});
+            if (v('impressions') !== undefined) metrics.push({label: 'Impressions', value: parseInt(v('impressions')).toLocaleString(), color: '#3B82F6'});
+            if (v('clicks') !== undefined) metrics.push({label: 'Clicks', value: parseInt(v('clicks')).toLocaleString(), color: '#3B82F6'});
+            if (v('conversions') !== undefined) metrics.push({label: 'Conversions', value: parseInt(v('conversions')).toLocaleString(), color: '#10B981'});
+            if (v('revenue_loss') !== undefined) metrics.push({label: 'Revenue Loss', value: fmtMoney(v('revenue_loss')), color: '#EF4444'});
+            if (v('cost_reduction') !== undefined) metrics.push({label: 'Cost Reduction', value: fmtMoney(v('cost_reduction')), color: '#10B981'});
+            if (v('net_impact') !== undefined) {
+                const ni = v('net_impact');
+                metrics.push({label: 'Net Impact', value: fmtMoney(ni), color: ni > 0 ? '#EF4444' : '#10B981'});
+            }
+            if (v('recovery_months') !== undefined) metrics.push({label: 'Recovery', value: v('recovery_months') + ' months', color: '#F59E0B'});
+            if (v('market_share_loss') !== undefined) metrics.push({label: 'Market Share Loss', value: fmtNum(v('market_share_loss'), 1) + '%', color: '#EF4444'});
+            if (v('defensive_spend') !== undefined) metrics.push({label: 'Defensive Spend', value: fmtMoney(v('defensive_spend')), color: '#F59E0B'});
+            if (v('new_customers') !== undefined) metrics.push({label: 'New Customers', value: parseInt(v('new_customers')).toLocaleString(), color: '#10B981'});
+            if (v('cac') !== undefined) metrics.push({label: 'CAC', value: '$' + fmtNum(v('cac'), 0), color: '#F59E0B'});
+            if (v('ltv_ratio') !== undefined) metrics.push({label: 'LTV/CAC', value: fmtNum(v('ltv_ratio'), 1) + 'x', color: '#10B981'});
+            if (v('capacity_gap') !== undefined) metrics.push({label: 'Capacity Gap', value: fmtMoney(v('capacity_gap')), color: '#EF4444'});
+            if (v('mitigation_cost') !== undefined) metrics.push({label: 'Mitigation Cost', value: fmtMoney(v('mitigation_cost')), color: '#F59E0B'});
+            if (v('efficiency_savings') !== undefined) metrics.push({label: 'Efficiency Savings', value: fmtMoney(v('efficiency_savings')), color: '#10B981'});
+            if (v('inventory_investment') !== undefined) metrics.push({label: 'Inventory Investment', value: fmtMoney(v('inventory_investment')), color: '#F59E0B'});
+            if (v('year1_revenue') !== undefined) metrics.push({label: 'Year 1 Revenue', value: fmtMoney(v('year1_revenue')), color: '#10B981'});
+            if (v('year2_revenue') !== undefined) metrics.push({label: 'Year 2 Revenue', value: fmtMoney(v('year2_revenue')), color: '#10B981'});
+            if (v('roi_years') !== undefined) metrics.push({label: 'ROI Period', value: v('roi_years') + ' years', color: '#10B981'});
+            if (v('payback_months') !== undefined) metrics.push({label: 'Payback', value: v('payback_months') + ' months', color: '#10B981'});
+            if (v('emi_monthly') !== undefined) metrics.push({label: 'EMI/Month', value: fmtMoney(v('emi_monthly')), color: '#3B82F6'});
+            if (v('total_interest') !== undefined) metrics.push({label: 'Total Interest', value: fmtMoney(v('total_interest')), color: '#F59E0B'});
+            if (v('total_payment') !== undefined) metrics.push({label: 'Total Payment', value: fmtMoney(v('total_payment')), color: '#3B82F6'});
+            if (v('debt_equity_ratio') !== undefined) metrics.push({label: 'Debt/Equity', value: fmtNum(v('debt_equity_ratio'), 2), color: v('debt_equity_ratio') > 1 ? '#EF4444' : '#10B981'});
+            if (v('future_value') !== undefined) metrics.push({label: 'Future Value', value: fmtMoney(v('future_value')), color: '#10B981'});
+            if (v('total_return') !== undefined) metrics.push({label: 'Total Return', value: fmtMoney(v('total_return')), color: '#10B981'});
+            if (v('annualized_return') !== undefined) metrics.push({label: 'Annualized Return', value: fmtNum(v('annualized_return'), 1) + '%', color: '#3B82F6'});
+            if (v('annual_savings') !== undefined) metrics.push({label: 'Annual Savings', value: fmtMoney(v('annual_savings')), color: '#10B981'});
+            if (v('severance_cost') !== undefined) metrics.push({label: 'Severance Cost', value: fmtMoney(v('severance_cost')), color: '#F59E0B'});
+            if (v('net_first_year') !== undefined) {
+                const nf = v('net_first_year');
+                metrics.push({label: 'Net First Year', value: (nf >= 0 ? '+' : '') + fmtMoney(nf), color: nf >= 0 ? '#10B981' : '#EF4444'});
+            }
+            if (v('morale_impact') !== undefined) metrics.push({label: 'Morale Impact', value: fmtNum(v('morale_impact'), 1) + '%', color: v('morale_impact') > 15 ? '#EF4444' : '#F59E0B'});
+            if (v('net_savings') !== undefined) {
+                const ns = v('net_savings');
+                metrics.push({label: 'Net Savings', value: (ns >= 0 ? '+' : '') + fmtMoney(ns), color: ns >= 0 ? '#10B981' : '#EF4444'});
+            }
+            if (v('productivity_gain') !== undefined) metrics.push({label: 'Productivity Gain', value: fmtMoney(v('productivity_gain')), color: '#10B981'});
+
+            if (metrics.length > 0) {
+                extraCards = '<div class="row g-3 mb-4">';
+                metrics.forEach(m => {
+                    extraCards += `<div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">${m.label}</small><div style="font-size: 16px; font-weight: 700; color: ${m.color};">${m.value}</div></div></div>`;
+                });
+                extraCards += '</div>';
+            }
+
+            const revBefore = getSimValue(s, 'revenue_before') || 0;
+            const revAfter = getSimValue(s, 'revenue_after') || 0;
+            const profBefore = getSimValue(s, 'profit_before') || 0;
+            const profAfter = getSimValue(s, 'profit_after') || 0;
+            const riskScore = getSimValue(s, 'risk_score') || 0;
+
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Revenue Impact</small><div style="font-size: 20px; font-weight: 700; color: ${revAfter > revBefore ? '#10B981' : '#EF4444'};">${revAfter > revBefore ? '+' : ''}${fmtMoney(revAfter - revBefore)}</div><small style="color: var(--text-secondary);">${fmtMoney(revBefore)} &rarr; ${fmtMoney(revAfter)}</small></div></div>
+                    <div class="col-md-6"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Profit Impact</small><div style="font-size: 20px; font-weight: 700; color: ${profAfter > profBefore ? '#10B981' : '#EF4444'};">${profAfter > profBefore ? '+' : ''}${fmtMoney(profAfter - profBefore)}</div><small style="color: var(--text-secondary);">${fmtMoney(profBefore)} &rarr; ${fmtMoney(profAfter)}</small></div></div>
+                </div>
+                ${extraCards}
+                <div class="mb-3"><span style="color: var(--text-secondary);">Risk Score:</span> <span class="badge-glass ${riskScore >= 70 ? 'badge-danger' : riskScore >= 40 ? 'badge-warning' : 'badge-success'}">${fmtNum(riskScore, 0)}</span></div>
+                <div class="p-3 mb-3" style="background: rgba(255,255,255,0.02); border-radius: 8px;"><small style="color: var(--text-secondary); display: block; margin-bottom: 4px;">Analysis</small><p style="color: var(--text-primary); font-size: 13px; margin: 0;">${s.recommendations || ''}</p></div>
+                <a href="/simulation/" class="btn btn-outline-glass">Back to Center</a>
+            `;
+        }
+    });
+});
+</script>
+{% endblock %}

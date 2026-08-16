@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reporting Center{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --glass-bg: rgba(20, 20, 35, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent: #667eea;
+    --accent-glow: rgba(102, 126, 234, 0.3);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+  }
+  
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .form-control-glass {
+    background: rgba(15, 15, 30, 0.8);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  
+  .form-control-glass:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.2rem var(--accent-glow);
+  }
+  
+  .btn-glass {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  
+  .btn-glass:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+    color: white;
+  }
+  
+  .btn-outline-glass {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  
+  .btn-outline-glass:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .badge-glass {
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  
+  .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+  .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+  .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+  .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); border-color: rgba(59, 130, 246, 0.3); }
+  .badge-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: rgba(139, 92, 246, 0.3); }
+  
+  .table-glass {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .table-glass th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    text-align: left;
+  }
+  
+  .table-glass td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+  
+  .table-glass tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  
+  .report-type-card {
+    background: rgba(15, 15, 30, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .report-type-card:hover, .report-type-card.active {
+    border-color: var(--accent);
+    background: rgba(102, 126, 234, 0.08);
+  }
+  
+  .report-type-card i {
+    font-size: 1.1rem;
+    color: var(--accent);
+    width: 24px;
+    text-align: center;
+  }
+  
+  .section-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+  }
+  
+  select.form-control-glass {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+  }
+  
+  .format-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .format-icon {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="row g-4">
+    <!-- LEFT: Generate Form -->
+    <div class="col-lg-4">
+      <div class="glass-card p-4">
+        <h5 class="section-title"><i class="fas fa-file-circle-plus me-2" style="color: var(--accent);"></i>Generate Report</h5>
+        <form method="POST" action="{{ url_for('reports.generate') }}" id="reportForm">
+          <div class="mb-3">
+            <label class="form-label" style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Report Name</label>
+            <input type="text" class="form-control-glass" name="name" placeholder="e.g. Q3 Board Deck" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label" style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Report Type</label>
+            <select class="form-control-glass" name="report_type" id="reportTypeSelect" required>
+              {% for rt in report_types %}
+              <option value="{{ rt }}" data-desc="{{ report_configs.get(rt, {}).get('description', '') }}">
+                {{ report_labels.get(rt, rt) }}
+              </option>
+              {% endfor %}
+            </select>
+            <div id="typeDescription" class="form-text mt-2" style="color: var(--text-secondary); font-size: 0.8rem; line-height: 1.5;">
+              {{ report_configs.get(report_types[0], {}).get('description', 'Select a report type.') }}
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label class="form-label" style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Export Format</label>
+            <select class="form-control-glass" name="format" required>
+              <option value="pdf">
+                <span class="format-option"><span class="format-icon">📄</span> PDF Document</span>
+              </option>
+              <option value="excel">
+                <span class="format-option"><span class="format-icon">📊</span> Excel Spreadsheet</span>
+              </option>
+              <option value="csv">
+                <span class="format-option"><span class="format-icon">📋</span> CSV File</span>
+              </option>
+            </select>
+            <div class="form-text mt-2" style="color: var(--text-secondary); font-size: 0.75rem;">
+              <i class="fas fa-circle-info me-1"></i>
+              PDF includes formatted narrative. Excel has multiple sheets. CSV is raw data.
+            </div>
+          </div>
+          
+          <button type="submit" class="btn-glass w-100">
+            <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Report
+          </button>
+        </form>
+      </div>
+      
+      <!-- Quick Type Guide -->
+      <div class="glass-card p-4 mt-4">
+        <h6 class="mb-3" style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">
+          <i class="fas fa-lightbulb me-2" style="color: var(--warning);"></i>Report Type Guide
+        </h6>
+        <div class="d-flex flex-column gap-2">
+          {% for rt in report_types %}
+          <div class="report-type-card" data-type="{{ rt }}">
+            <i class="fas 
+              {% if rt == 'executive' %}fa-crown
+              {% elif rt == 'board' %}fa-gavel
+              {% elif rt == 'investor' %}fa-chart-line
+              {% elif rt == 'risk' %}fa-shield-halved
+              {% elif rt == 'growth' %}fa-rocket
+              {% elif rt == 'forecast' %}fa-wand-magic-sparkles
+              {% elif rt == 'financial' %}fa-coins
+              {% elif rt == 'operational' %}fa-gears
+              {% elif rt == 'department' %}fa-users
+              {% else %}fa-file{% endif %}">
+            </i>
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary); font-size: 0.85rem;">
+                {{ report_labels.get(rt, rt) }}
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                {{ report_configs.get(rt, {}).get('description', '') }}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    
+    <!-- RIGHT: Generated Reports -->
+    <div class="col-lg-8">
+      <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="section-title m-0"><i class="fas fa-folder-open me-2" style="color: var(--accent);"></i>Generated Reports</h5>
+          {% if reports|length > 0 %}
+          <span class="badge-glass badge-info">{{ reports|length }} total</span>
+          {% endif %}
+        </div>
+        
+        {% if reports %}
+        <div class="table-responsive">
+          <table class="table-glass">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Format</th>
+                <th>Generated</th>
+                <th>Size</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in reports %}
+              <tr>
+                <td style="font-weight: 600;">
+                  <i class="fas fa-file me-2" style="color: var(--text-secondary);"></i>
+                  {{ r.name }}
+                </td>
+                <td>
+                  <span class="badge-glass 
+                    {% if r.report_type in ('executive', 'board') %}badge-purple
+                    {% elif r.report_type in ('investor', 'growth') %}badge-success
+                    {% elif r.report_type == 'risk' %}badge-danger
+                    {% elif r.report_type == 'financial' %}badge-warning
+                    {% else %}badge-info{% endif %}">
+                    {{ report_labels.get(r.report_type, r.report_type) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge-glass badge-info" style="text-transform: uppercase; font-size: 0.7rem;">
+                    <i class="fas 
+                      {% if r.format == 'pdf' %}fa-file-pdf
+                      {% elif r.format in ('excel', 'xlsx') %}fa-file-excel
+                      {% elif r.format == 'csv' %}fa-file-csv
+                      {% else %}fa-file{% endif %} me-1">
+                    </i>
+                    {{ r.format }}
+                  </span>
+                </td>
+                <td style="color: var(--text-secondary); font-size: 0.85rem;">
+                  {{ r.last_generated.strftime('%Y-%m-%d %H:%M') if r.last_generated else 'Pending' }}
+                </td>
+                <td style="color: var(--text-secondary); font-size: 0.85rem;">
+                  {% if r.file_size %}
+                    {% if r.file_size > 1048576 %}
+                      {{ "%.1f"|format(r.file_size / 1048576) }} MB
+                    {% else %}
+                      {{ "%.0f"|format(r.file_size / 1024) }} KB
+                    {% endif %}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if r.file_path %}
+                  <a href="{{ url_for('reports.download', report_id=r.id) }}" class="btn-outline-glass" title="Download">
+                    <i class="fas fa-download"></i>
+                    <span class="d-none d-md-inline">Download</span>
+                  </a>
+                  {% else %}
+                  <span class="badge-glass badge-danger" style="font-size: 0.7rem;">
+                    <i class="fas fa-triangle-exclamation me-1"></i>Failed
+                  </span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="fas fa-file-circle-plus mb-3" style="font-size: 2.5rem; opacity: 0.3;"></i>
+          <p class="mb-1" style="font-weight: 600; color: var(--text-primary);">No reports generated yet</p>
+          <p class="mb-0" style="font-size: 0.875rem;">Select a report type and format, then click Generate.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.CURRENCY_SYMBOL = "{{ currency_symbol }}";
+  
+  // Update description when report type changes
+  const select = document.getElementById('reportTypeSelect');
+  const desc = document.getElementById('typeDescription');
+  const cards = document.querySelectorAll('.report-type-card');
+  
+  select.addEventListener('change', function() {
+    const option = this.options[this.selectedIndex];
+    desc.textContent = option.getAttribute('data-desc') || '';
+    
+    // Highlight matching card
+    cards.forEach(c => c.classList.remove('active'));
+    const activeCard = document.querySelector(`.report-type-card[data-type="${this.value}"]`);
+    if (activeCard) activeCard.classList.add('active');
+  });
+  
+  // Click card to select type
+  cards.forEach(card => {
+    card.addEventListener('click', function() {
+      const type = this.getAttribute('data-type');
+      select.value = type;
+      select.dispatchEvent(new Event('change'));
+    });
+  });
+  
+  // Initialize
+  select.dispatchEvent(new Event('change'));
+</script>
+{% endblock %}

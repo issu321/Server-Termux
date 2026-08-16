@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ sim_label }}{% endblock %}
+{% block page_title %}{{ sim_label }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="glass-card p-4">
+            <h5 class="mb-4" style="font-weight: 600;">Supplier Change Parameters</h5>
+            <form method="POST" id="simForm">
+                <input type="hidden" name="name" value="{{ sim_label }} - {{ now }}">
+                <div class="mb-3">
+                    <label class="form-label">Supplier</label>
+                    <select class="form-control-glass" name="supplier_id">
+                        {% if real_data.suppliers %}
+                            {% for sup in real_data.suppliers %}
+                            <option value="{{ sup.id }}">{{ sup.name }} ({{ sup.country or 'N/A' }})</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="">No suppliers found</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Current Cost per Unit ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="current_cost" value="100" step="0.01" required></div>
+                <div class="mb-3"><label class="form-label">New Cost per Unit ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="new_cost" value="85" step="0.01" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Quality Rating</label>
+                    <select class="form-control-glass" name="quality_rating">
+                        <option value="better">Better</option>
+                        <option value="same" selected>Same</option>
+                        <option value="worse">Worse</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Lead Time (days)</label><input type="number" class="form-control-glass" name="lead_time" value="14" required></div>
+                <div class="mb-3"><label class="form-label">Transition Cost ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="transition_cost" value="5000" required></div>
+                <button type="submit" class="btn-glass w-100"><i class="fas fa-play me-2"></i>Run Simulation</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="glass-card p-4" id="resultsCard" style="display: none;"><h5 class="mb-3" style="font-weight: 600;">Results</h5><div id="resultsContent"></div></div>
+        <div class="glass-card p-4" id="placeholderCard">
+            <div class="text-center py-5"><i class="fas fa-truck mb-3" style="font-size: 48px; color: var(--accent-primary); opacity: 0.5;"></i><p style="color: var(--text-secondary);">Run simulation to see supplier change impact</p></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<script src="{{ url_for('static', filename='js/simulation_formatter.js') }}"></script>
+<script>
+document.getElementById('simForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(window.location.pathname, {method: 'POST', body: new FormData(this), headers: {'X-Requested-With': 'XMLHttpRequest'}})
+    .then(r => r.json()).then(data => {
+        if(data.success && data.simulation) {
+            const s = data.simulation;
+            document.getElementById('placeholderCard').style.display = 'none';
+            document.getElementById('resultsCard').style.display = 'block';
+
+            const annualSavings = getSimValue(s, 'annual_savings');
+            const netSavings = getSimValue(s, 'net_savings');
+            const payback = getSimValue(s, 'payback_months');
+            const riskScore = getSimValue(s, 'risk_score') || 0;
+
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Annual Savings</small><div style="font-size: 18px; font-weight: 700; color: #10B981;">${fmtMoney(annualSavings)}</div></div></div>
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Net Savings</small><div style="font-size: 18px; font-weight: 700; color: ${(netSavings || 0) > 0 ? '#10B981' : '#EF4444'};">${(netSavings || 0) > 0 ? '+' : ''}${fmtMoney(netSavings)}</div></div></div>
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Payback</small><div style="font-size: 18px; font-weight: 700;">${payback !== undefined ? payback + ' months' : 'N/A'}</div></div></div>
+                </div>
+                <div class="mb-3"><span style="color: var(--text-secondary);">Risk Score:</span> <span class="badge-glass ${riskScore >= 70 ? 'badge-danger' : riskScore >= 40 ? 'badge-warning' : 'badge-success'}">${fmtNum(riskScore, 0)}</span></div>
+                <div class="p-3 mb-3" style="background: rgba(255,255,255,0.02); border-radius: 8px;"><small style="color: var(--text-secondary); display: block; margin-bottom: 4px;">Analysis</small><p style="color: var(--text-primary); font-size: 13px; margin: 0;">${s.recommendations || ''}</p></div>
+                <a href="/simulation/" class="btn btn-outline-glass">Back to Center</a>
+            `;
+        }
+    });
+});
+</script>
+{% endblock %}

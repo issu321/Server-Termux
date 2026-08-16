@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Supply Chain Simulator{% endblock %}
+{% block page_title %}Supply Chain Simulator{% endblock %}
+{% block content %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<div class="glass-card p-4 mb-4">
+    <h5 class="mb-3" style="font-weight: 600;">Supplier Simulator</h5>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="glass-card p-4">
+                <h6 class="mb-3" style="font-weight: 600;">Supplier Change Impact</h6>
+                <form onsubmit="event.preventDefault(); runSupplierSim();">
+                    <div class="mb-3"><label class="form-label">Current Cost per Unit ({{ currency_symbol }})</label><input type="number" class="form-control-glass" id="currentCost" value="100" step="0.01"></div>
+                    <div class="mb-3"><label class="form-label">New Cost per Unit ({{ currency_symbol }})</label><input type="number" class="form-control-glass" id="newCost" value="85" step="0.01"></div>
+                    <div class="mb-3"><label class="form-label">Monthly Volume</label><input type="number" class="form-control-glass" id="volume" value="1000"></div>
+                    <div class="mb-3"><label class="form-label">Quality Rating (1-5)</label><input type="number" class="form-control-glass" id="quality" value="4" min="1" max="5" step="0.1"></div>
+                    <button type="submit" class="btn-glass w-100"><i class="fas fa-calculator me-2"></i>Calculate Savings</button>
+                </form>
+                <div id="supplierResult" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="glass-card p-4">
+                <h6 class="mb-3" style="font-weight: 600;">Supply Chain Overview</h6>
+                <div class="mb-3"><small style="color: var(--text-secondary);">Suppliers</small><div style="font-size: 24px; font-weight: 700;">{{ suppliers|length }}</div></div>
+                <div class="mb-3"><small style="color: var(--text-secondary);">Inventory SKUs</small><div style="font-size: 24px; font-weight: 700; color: var(--accent-primary);">{{ items|length }}</div></div>
+                <div class="mb-3"><small style="color: var(--text-secondary);">Low Stock Items</small><div style="font-size: 24px; font-weight: 700; color: #EF4444;">{{ items|selectattr("is_low_stock")|list|length }}</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+window.CURRENCY_SYMBOL = "{{ currency_symbol }}";
+function runSupplierSim() {
+    const current = parseFloat(document.getElementById('currentCost').value);
+    const newCost = parseFloat(document.getElementById('newCost').value);
+    const volume = parseFloat(document.getElementById('volume').value);
+    const monthlySavings = (current - newCost) * volume;
+    const annualSavings = monthlySavings * 12;
+    document.getElementById('supplierResult').innerHTML = `
+        <div class="p-3" style="background: rgba(16,185,129,0.05); border: 1px solid #10B981; border-radius: 10px;">
+            <div class="row g-2">
+                <div class="col-6"><small style="color: var(--text-secondary);">Monthly Savings</small><div style="font-weight: 700; color: #10B981;">${window.CURRENCY_SYMBOL}${monthlySavings.toLocaleString()}</div></div>
+                <div class="col-6"><small style="color: var(--text-secondary);">Annual Savings</small><div style="font-weight: 700; color: #10B981;">${window.CURRENCY_SYMBOL}${annualSavings.toLocaleString()}</div></div>
+            </div>
+        </div>`;
+    document.getElementById('supplierResult').style.display = 'block';
+}
+</script>
+{% endblock %}

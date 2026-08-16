@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ sim_label }}{% endblock %}
+{% block page_title %}{{ sim_label }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="glass-card p-4">
+            <h5 class="mb-4" style="font-weight: 600;">Investment Parameters</h5>
+            <form method="POST" id="simForm">
+                <input type="hidden" name="name" value="{{ sim_label }} - {{ now }}">
+                <div class="mb-3"><label class="form-label">Investment Amount ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="amount" value="100000" required></div>
+                <div class="mb-3"><label class="form-label">Expected Return (%)</label><input type="number" class="form-control-glass" name="return_rate" value="10" step="0.1" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Risk Level</label>
+                    <select class="form-control-glass" name="risk_level">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Timeline (months)</label><input type="number" class="form-control-glass" name="timeline_months" value="12" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Investment Type</label>
+                    <select class="form-control-glass" name="investment_type">
+                        <option value="stocks">Stocks</option>
+                        <option value="bonds">Bonds</option>
+                        <option value="real_estate">Real Estate</option>
+                        <option value="crypto">Crypto</option>
+                        <option value="mixed">Mixed Portfolio</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-glass w-100"><i class="fas fa-play me-2"></i>Run Simulation</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="glass-card p-4" id="resultsCard" style="display: none;"><h5 class="mb-3" style="font-weight: 600;">Results</h5><div id="resultsContent"></div></div>
+        <div class="glass-card p-4" id="placeholderCard">
+            <div class="text-center py-5"><i class="fas fa-chart-line mb-3" style="font-size: 48px; color: var(--accent-primary); opacity: 0.5;"></i><p style="color: var(--text-secondary);">Run simulation to see investment projections</p></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<script src="{{ url_for('static', filename='js/simulation_formatter.js') }}"></script>
+<script>
+document.getElementById('simForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(window.location.pathname, {method: 'POST', body: new FormData(this), headers: {'X-Requested-With': 'XMLHttpRequest'}})
+    .then(r => r.json()).then(data => {
+        if(data.success && data.simulation) {
+            const s = data.simulation;
+            document.getElementById('placeholderCard').style.display = 'none';
+            document.getElementById('resultsCard').style.display = 'block';
+
+            const fv = getSimValue(s, 'future_value');
+            const tr = getSimValue(s, 'total_return');
+            const ar = getSimValue(s, 'annualized_return');
+            const riskScore = getSimValue(s, 'risk_score') || 0;
+
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Future Value</small><div style="font-size: 18px; font-weight: 700; color: #10B981;">${fmtMoney(fv)}</div></div></div>
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Total Return</small><div style="font-size: 18px; font-weight: 700; color: #10B981;">${fmtMoney(tr)}</div></div></div>
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Annualized Return</small><div style="font-size: 18px; font-weight: 700; color: #3B82F6;">${fmtNum(ar, 1)}%</div></div></div>
+                </div>
+                <div class="mb-3"><span style="color: var(--text-secondary);">Risk Score:</span> <span class="badge-glass ${riskScore >= 70 ? 'badge-danger' : riskScore >= 40 ? 'badge-warning' : 'badge-success'}">${fmtNum(riskScore, 0)}</span></div>
+                <div class="p-3 mb-3" style="background: rgba(255,255,255,0.02); border-radius: 8px;"><small style="color: var(--text-secondary); display: block; margin-bottom: 4px;">Analysis</small><p style="color: var(--text-primary); font-size: 13px; margin: 0;">${s.recommendations || ''}</p></div>
+                <a href="/simulation/" class="btn btn-outline-glass">Back to Center</a>
+            `;
+        }
+    });
+});
+</script>
+{% endblock %}

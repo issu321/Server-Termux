@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Risk Heatmap{% endblock %}
+{% block page_title %}Risk Heatmap{% endblock %}
+{% block content %}
+<div class="glass-card p-4">
+    <h5 class="mb-3" style="font-weight: 600;">Interactive Risk Heatmap</h5>
+    <div id="heatmapChart" style="width: 100%; height: 500px;"></div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const heatmapData = {{ heatmap_data | tojson }};
+Plotly.newPlot('heatmapChart', [{
+    x: heatmapData.map(d => d.probability * 100),
+    y: heatmapData.map(d => d.impact * 100),
+    mode: 'markers+text',
+    type: 'scatter',
+    text: heatmapData.map(d => d.name),
+    textposition: 'top center',
+    marker: {
+        size: heatmapData.map(d => Math.max(15, d.score / 3)),
+        color: heatmapData.map(d => d.score),
+        colorscale: [[0, '#10B981'], [0.3, '#F59E0B'], [0.6, '#F97316'], [1, '#EF4444']],
+        showscale: true,
+        colorbar: {title: 'Score', tickfont: {color: '#94A3B8'}}
+    }
+}], {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: {color: '#94A3B8'},
+    xaxis: {title: 'Probability (%)', gridcolor: 'rgba(255,255,255,0.03)', range: [0, 100]},
+    yaxis: {title: 'Impact (%)', gridcolor: 'rgba(255,255,255,0.03)', range: [0, 100]},
+    shapes: [
+        {type: 'rect', x0: 0, y0: 0, x1: 40, y1: 40, fillcolor: 'rgba(16,185,129,0.05)', line: {width: 0}},
+        {type: 'rect', x0: 40, y0: 40, x1: 70, y1: 70, fillcolor: 'rgba(245,158,11,0.05)', line: {width: 0}},
+        {type: 'rect', x0: 70, y0: 70, x1: 100, y1: 100, fillcolor: 'rgba(239,68,68,0.05)', line: {width: 0}}
+    ],
+    margin: {t: 20, r: 20, b: 50, l: 50}
+}, {responsive: true, displayModeBar: false});
+</script>
+{% endblock %}

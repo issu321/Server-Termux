@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ sim_label }}{% endblock %}
+{% block page_title %}{{ sim_label }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="glass-card p-4">
+            <h5 class="mb-4" style="font-weight: 600;">Loan Parameters</h5>
+            <form method="POST" id="simForm">
+                <input type="hidden" name="name" value="{{ sim_label }} - {{ now }}">
+                <div class="mb-3"><label class="form-label">Loan Amount ({{ currency_symbol }})</label><input type="number" class="form-control-glass" name="amount" value="100000" required></div>
+                <div class="mb-3"><label class="form-label">Interest Rate (%)</label><input type="number" class="form-control-glass" name="interest_rate" value="8" step="0.1" required></div>
+                <div class="mb-3"><label class="form-label">Tenure (months)</label><input type="number" class="form-control-glass" name="tenure_months" value="60" required></div>
+                <div class="mb-3"><label class="form-label">Purpose</label><input type="text" class="form-control-glass" name="purpose" placeholder="e.g. Working Capital"></div>
+                <button type="submit" class="btn-glass w-100"><i class="fas fa-play me-2"></i>Run Simulation</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="glass-card p-4" id="resultsCard" style="display: none;"><h5 class="mb-3" style="font-weight: 600;">Results</h5><div id="resultsContent"></div></div>
+        <div class="glass-card p-4" id="placeholderCard">
+            <div class="text-center py-5"><i class="fas fa-hand-holding-usd mb-3" style="font-size: 48px; color: var(--accent-primary); opacity: 0.5;"></i><p style="color: var(--text-secondary);">Run simulation to see loan impact</p></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<script src="{{ url_for('static', filename='js/simulation_formatter.js') }}"></script>
+<script>
+document.getElementById('simForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(window.location.pathname, {method: 'POST', body: new FormData(this), headers: {'X-Requested-With': 'XMLHttpRequest'}})
+    .then(r => r.json()).then(data => {
+        if(data.success && data.simulation) {
+            const s = data.simulation;
+            document.getElementById('placeholderCard').style.display = 'none';
+            document.getElementById('resultsCard').style.display = 'block';
+
+            const emi = getSimValue(s, 'emi_monthly');
+            const totalInt = getSimValue(s, 'total_interest');
+            const totalPay = getSimValue(s, 'total_payment');
+            const der = getSimValue(s, 'debt_equity_ratio');
+            const totalDebt = getSimValue(s, 'total_debt');
+            const totalEquity = getSimValue(s, 'total_equity');
+            const monthlyCF = getSimValue(s, 'monthly_cash_flow');
+            const emiCfPct = getSimValue(s, 'emi_to_cashflow_pct');
+            const profBefore = getSimValue(s, 'profit_before') || 0;
+            const profAfter = getSimValue(s, 'profit_after') || 0;
+            const riskScore = getSimValue(s, 'risk_score') || 0;
+
+            let deColor = '#10B981';
+            if (der > 1.0) deColor = '#EF4444';
+            else if (der > 0.5) deColor = '#F59E0B';
+
+            let cfColor = '#10B981';
+            if (emiCfPct > 30) cfColor = '#EF4444';
+            else if (emiCfPct > 15) cfColor = '#F59E0B';
+
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">EMI/Month</small><div style="font-size: 18px; font-weight: 700;">${fmtMoney(emi)}</div></div></div>
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Total Interest</small><div style="font-size: 18px; font-weight: 700; color: #F59E0B;">${fmtMoney(totalInt)}</div></div></div>
+                    <div class="col-md-4"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Total Payment</small><div style="font-size: 18px; font-weight: 700;">${fmtMoney(totalPay)}</div></div></div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Debt/Equity Ratio</small><div style="font-size: 18px; font-weight: 700; color: ${deColor};">${fmtNum(der, 4)}</div><small style="color: var(--text-secondary); font-size: 11px;">${fmtMoney(totalDebt)} debt / ${fmtMoney(totalEquity)} equity</small></div></div>
+                    <div class="col-md-6"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Profit Impact</small><div style="font-size: 18px; font-weight: 700; color: ${profAfter > profBefore ? '#10B981' : '#EF4444'};">${profAfter > profBefore ? '+' : ''}${fmtMoney(profAfter - profBefore)}</div></div></div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">EMI vs Cash Flow</small><div style="font-size: 18px; font-weight: 700; color: ${cfColor};">${fmtNum(emiCfPct, 2)}%</div><small style="color: var(--text-secondary); font-size: 11px;">${fmtMoney(emi)} EMI / ${fmtMoney(monthlyCF)} monthly cash flow</small></div></div>
+                    <div class="col-md-6"><div class="p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px;"><small style="color: var(--text-secondary);">Total New Debt</small><div style="font-size: 18px; font-weight: 700;">${fmtMoney(totalDebt)}</div></div></div>
+                </div>
+                <div class="mb-3"><span style="color: var(--text-secondary);">Risk Score:</span> <span class="badge-glass ${riskScore >= 70 ? 'badge-danger' : riskScore >= 40 ? 'badge-warning' : 'badge-success'}">${fmtNum(riskScore, 0)}</span></div>
+                <div class="p-3 mb-3" style="background: rgba(255,255,255,0.02); border-radius: 8px;"><small style="color: var(--text-secondary); display: block; margin-bottom: 4px;">Analysis</small><p style="color: var(--text-primary); font-size: 13px; margin: 0;">${s.recommendations || ''}</p></div>
+                <a href="/simulation/" class="btn btn-outline-glass">Back to Center</a>
+            `;
+        }
+    });
+});
+</script>
+{% endblock %}

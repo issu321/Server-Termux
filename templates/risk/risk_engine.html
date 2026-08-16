@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+{% block title %}Risk Engine{% endblock %}
+{% block page_title %}Risk Engine{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --glass-bg: rgba(20, 20, 35, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent: #667eea;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .badge-glass {
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  
+  .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+  .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+  .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+  .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); border-color: rgba(59, 130, 246, 0.3); }
+  
+  .table-glass {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .table-glass th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    text-align: left;
+  }
+  
+  .table-glass td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+  
+  .table-glass tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  
+  /* PROGRESS BAR FIX - Explicit visible styling */
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease-out;
+    position: relative;
+  }
+  
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2));
+    border-radius: 0 4px 4px 0;
+  }
+  
+  .category-card {
+    background: rgba(15, 15, 30, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s;
+  }
+  
+  .category-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  
+  .insight-banner {
+    background: rgba(102, 126, 234, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .risk-level-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+  
+  .section-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+  }
+  
+  .metric-big {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  
+  .metric-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <!-- Top Insight Banner -->
+  <div class="insight-banner mb-4">
+    <div class="d-flex align-items-start gap-3">
+      <i class="fas fa-shield-halved mt-1" style="color: var(--accent); font-size: 1.25rem;"></i>
+      <div>
+        <p class="mb-1" style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">
+          Overall Assessment: {{ summary.risk_level|upper }} Risk Profile
+        </p>
+        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+          {{ summary.overall_advice }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="stats-grid mb-4">
+    <div class="glass-card p-4 text-center">
+      <div class="metric-big" style="color: {% if summary.overall_score >= 70 %}var(--danger){% elif summary.overall_score >= 40 %}var(--warning){% else %}var(--success){% endif %};">
+        {{ "%.0f"|format(summary.overall_score) }}
+      </div>
+      <div class="metric-label">Overall Risk Score</div>
+      <div class="mt-2">
+        <span class="badge-glass {% if summary.risk_level == 'critical' %}badge-danger{% elif summary.risk_level == 'high' %}badge-warning{% elif summary.risk_level == 'medium' %}badge-info{% else %}badge-success{% endif %}">
+          {{ summary.risk_level|title }}
+        </span>
+      </div>
+    </div>
+    <div class="glass-card p-4 text-center">
+      <div class="metric-big" style="color: var(--danger);">{{ summary.critical_count }}</div>
+      <div class="metric-label">Critical Risks</div>
+      {% if summary.critical_count > 0 %}
+      <div class="mt-2" style="font-size: 0.75rem; color: var(--danger);">
+        <i class="fas fa-triangle-exclamation me-1"></i>Requires action
+      </div>
+      {% endif %}
+    </div>
+    <div class="glass-card p-4 text-center">
+      <div class="metric-big" style="color: var(--warning);">{{ summary.high_count }}</div>
+      <div class="metric-label">High Risks</div>
+    </div>
+    <div class="glass-card p-4 text-center">
+      <div class="metric-big" style="color: var(--success);">{{ summary.total_risks }}</div>
+      <div class="metric-label">Total Assessed</div>
+      <div class="mt-2" style="font-size: 0.75rem; color: var(--text-secondary);">
+        {{ summary.medium_count }} medium · {{ summary.low_count }} low
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk by Category -->
+  <div class="glass-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h5 class="section-title m-0"><i class="fas fa-chart-bar me-2" style="color: var(--accent);"></i>Risk by Category</h5>
+      <span class="badge-glass badge-info" style="font-size: 0.8rem;">{{ summary.category_scores|length }} categories</span>
+    </div>
+    
+    <div class="row g-3">
+      {% for cat, data in summary.category_scores.items() %}
+      <div class="col-md-4">
+        <div class="category-card">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">
+                {{ category_labels.get(cat, cat)|replace('_', ' ')|title }}
+              </span>
+              <p class="mb-0 mt-1" style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">
+                {{ data.explanation }}
+              </p>
+            </div>
+            <span style="font-size: 1.1rem; font-weight: 700; color: {% if data.avg_score >= 70 %}var(--danger){% elif data.avg_score >= 40 %}var(--warning){% else %}var(--success){% endif %};">
+              {{ "%.0f"|format(data.avg_score) }}
+            </span>
+          </div>
+          
+          <!-- FIXED: Explicit progress bar with visible track and fill -->
+          <div class="progress-track mb-2">
+            <div class="progress-fill" style="width: {{ data.avg_score }}%; background: {% if data.avg_score >= 70 %}var(--danger){% elif data.avg_score >= 40 %}var(--warning){% else %}var(--success){% endif %};"></div>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
+            <span style="color: var(--text-secondary);">
+              {{ data.risk_count }} risks assessed
+            </span>
+            <span style="color: var(--text-secondary);">
+              {% if data.critical_count > 0 %}
+              <span class="badge-glass badge-danger" style="font-size: 0.65rem;">{{ data.critical_count }} critical</span>
+              {% endif %}
+              {% if data.high_count > 0 %}
+              <span class="badge-glass badge-warning" style="font-size: 0.65rem;">{{ data.high_count }} high</span>
+              {% endif %}
+            </span>
+          </div>
+          
+          <div class="mt-2 pt-2" style="border-top: 1px solid var(--glass-border);">
+            <p class="mb-0" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+              <i class="fas fa-circle-info me-1" style="color: var(--accent);"></i>
+              {{ data.advice }}
+            </p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Top Risks Highlight -->
+  {% if summary.top_risks %}
+  <div class="glass-card p-4 mb-4">
+    <h5 class="section-title"><i class="fas fa-triangle-exclamation me-2" style="color: var(--danger);"></i>Top Priority Risks</h5>
+    <div class="row g-3">
+      {% for risk in summary.top_risks %}
+      <div class="col-md-4">
+        <div class="category-card" style="border-left: 3px solid {% if risk.risk_score >= 70 %}var(--danger){% elif risk.risk_score >= 40 %}var(--warning){% else %}var(--success){% endif %};">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">{{ risk.name }}</span>
+            <span style="font-weight: 700; color: {% if risk.risk_score >= 70 %}var(--danger){% elif risk.risk_score >= 40 %}var(--warning){% else %}var(--success){% endif %};">
+              {{ "%.0f"|format(risk.risk_score) }}
+            </span>
+          </div>
+          <p class="mb-2" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">{{ risk.description }}</p>
+          <div class="d-flex gap-2" style="font-size: 0.75rem;">
+            <span style="color: var(--text-secondary);"><i class="fas fa-percent me-1"></i>{{ "%.0f"|format(risk.probability * 100) }}% probability</span>
+            <span style="color: var(--text-secondary);"><i class="fas fa-bolt me-1"></i>{{ "%.0f"|format(risk.impact * 100) }}% impact</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Risk Heatmap -->
+  <div class="glass-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="section-title m-0"><i class="fas fa-braille me-2" style="color: var(--accent);"></i>Risk Heatmap</h5>
+      <div class="d-flex gap-2">
+        <span style="font-size: 0.75rem; color: var(--text-secondary);"><span class="risk-level-dot" style="background: var(--success);"></span>Low</span>
+        <span style="font-size: 0.75rem; color: var(--text-secondary);"><span class="risk-level-dot" style="background: var(--warning);"></span>Medium</span>
+        <span style="font-size: 0.75rem; color: var(--text-secondary);"><span class="risk-level-dot" style="background: var(--danger);"></span>Critical</span>
+      </div>
+    </div>
+    <div id="riskHeatmap" style="width: 100%; height: 420px;"></div>
+    <div class="mt-2" style="font-size: 0.8rem; color: var(--text-secondary);">
+      <i class="fas fa-circle-info me-1"></i>
+      Bubble size = risk score. Position = probability (horizontal) vs impact (vertical). Top-right = most dangerous.
+    </div>
+  </div>
+
+  <!-- Risk Register -->
+  <div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="section-title m-0"><i class="fas fa-list-check me-2" style="color: var(--text-secondary);"></i>Risk Register</h5>
+      <span class="badge-glass badge-info">{{ risks|length }} entries</span>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table-glass">
+        <thead>
+          <tr>
+            <th>Risk Name</th>
+            <th>Category</th>
+            <th>Probability</th>
+            <th>Impact</th>
+            <th class="text-end">Score</th>
+            <th>Level</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for risk in risks %}
+        <tr>
+          <td style="font-weight: 600;">
+            <span class="risk-level-dot" style="background: {% if risk.risk_level == 'critical' %}var(--danger){% elif risk.risk_level == 'high' %}var(--warning){% elif risk.risk_level == 'medium' %}var(--info){% else %}var(--success){% endif %};"></span>
+            {{ risk.name }}
+          </td>
+          <td>
+            <span class="badge-glass badge-info" style="font-size: 0.7rem;">
+              {{ category_labels.get(risk.category, risk.category)|replace('_', ' ')|title }}
+            </span>
+          </td>
+          <td style="color: var(--text-secondary);">{{ "%.0f"|format(risk.probability * 100) }}%</td>
+          <td style="color: var(--text-secondary);">{{ "%.0f"|format(risk.impact * 100) }}%</td>
+          <td class="text-end" style="font-weight: 700; color: {% if risk.risk_score >= 70 %}var(--danger){% elif risk.risk_score >= 40 %}var(--warning){% else %}var(--success){% endif %};">
+            {{ "%.0f"|format(risk.risk_score) }}
+          </td>
+          <td>
+            <span class="badge-glass {% if risk.risk_level == 'critical' %}badge-danger{% elif risk.risk_level == 'high' %}badge-warning{% elif risk.risk_level == 'medium' %}badge-info{% else %}badge-success{% endif %}">
+              {{ risk.risk_level|title }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const risks = {{ risks_data|tojson }};
+  const names = risks.map(r => r.name);
+  const scores = risks.map(r => r.risk_score);
+
+  Plotly.newPlot('riskHeatmap', [{
+    x: risks.map(r => r.probability * 100),
+    y: risks.map(r => r.impact * 100),
+    mode: 'markers+text',
+    type: 'scatter',
+    text: names,
+    textposition: 'top center',
+    textfont: { color: '#94A3B8', size: 11 },
+    marker: {
+      size: scores.map(s => Math.max(12, s / 2.5)),
+      color: scores,
+      colorscale: [[0, '#10B981'], [0.3, '#F59E0B'], [0.6, '#F97316'], [1, '#EF4444']],
+      showscale: true,
+      colorbar: {
+        title: { text: 'Risk Score', font: { color: '#94A3B8', size: 12 } },
+        tickfont: { color: '#94A3B8', size: 10 },
+        thickness: 12,
+        len: 0.8
+      },
+      opacity: 0.85,
+      line: { color: 'rgba(255,255,255,0.2)', width: 1 }
+    },
+    hovertemplate: '<b>%{text}</b><br>Probability: %{x:.0f}%<br>Impact: %{y:.0f}%<br>Score: %{marker.color:.0f}<extra></extra>'
+  }], {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94A3B8', family: 'Inter, sans-serif' },
+    xaxis: {
+      title: { text: 'Probability (%)', font: { color: '#64748b', size: 12 } },
+      gridcolor: 'rgba(255,255,255,0.03)',
+      range: [0, 100],
+      tickfont: { size: 11 }
+    },
+    yaxis: {
+      title: { text: 'Impact (%)', font: { color: '#64748b', size: 12 } },
+      gridcolor: 'rgba(255,255,255,0.03)',
+      range: [0, 100],
+      tickfont: { size: 11 }
+    },
+    margin: { t: 30, r: 30, b: 50, l: 50 },
+    hovermode: 'closest'
+  }, {
+    responsive: true,
+    displayModeBar: false
+  });
+</script>
+{% endblock %}

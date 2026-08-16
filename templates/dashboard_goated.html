@@ -1,0 +1,1485 @@
+{% extends "base.html" %}
+{% block title %}Enterprise Dashboard - GOATED{% endblock %}
+{% block page_title %}Enterprise Command Center{% endblock %}
+
+{% block content %}
+<!-- GOATED Dashboard - Enterprise Command Center -->
+<style>
+  /* ===== GOATED DASHBOARD STYLES ===== */
+  :root {
+    --primary-gradient: linear-gradient(135deg, #00D4FF, #8B5CF6);
+    --success-gradient: linear-gradient(135deg, #10B981, #059669);
+    --warning-gradient: linear-gradient(135deg, #F59E0B, #D97706);
+    --danger-gradient: linear-gradient(135deg, #EF4444, #DC2626);
+    --dark-bg: #0B1120;
+    --card-bg: rgba(255, 255, 255, 0.03);
+    --border-glow: 0 0 20px rgba(0, 212, 255, 0.3);
+  }
+
+  /* Animated Background */
+  .dashboard-bg {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -2;
+    background: 
+      radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+    animation: aurora-shift 15s ease-in-out infinite;
+  }
+
+  @keyframes aurora-shift {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+  }
+
+  /* Command Center Header */
+  .command-center {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--border-glow);
+    animation: slideDown 0.8s ease-out;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .command-center::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+    animation: gradient-flow 3s ease-in-out infinite;
+  }
+
+  @keyframes gradient-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* KPI Cards - Animated */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .kpi-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: both;
+  }
+
+  .kpi-card:nth-child(1) { animation-delay: 0.1s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.2s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.3s; }
+  .kpi-card:nth-child(4) { animation-delay: 0.4s; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--border-glow);
+    border-color: rgba(0, 212, 255, 0.3);
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .kpi-card:hover::before {
+    opacity: 0.1;
+  }
+
+  .kpi-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 1rem;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .kpi-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.25rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .kpi-label {
+    font-size: 0.9rem;
+    color: #94A3B8;
+    font-weight: 500;
+  }
+
+  .kpi-change {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+  }
+
+  .kpi-change.positive { color: #10B981; }
+  .kpi-change.negative { color: #EF4444; }
+
+  /* Financial Command Center */
+  .command-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .financial-overview {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 1.5rem;
+    animation: slideInLeft 0.8s ease-out;
+  }
+
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-50px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .ai-predictions {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 1.5rem;
+    animation: slideInRight 0.8s ease-out;
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: var(--primary-gradient);
+    border-radius: 2px;
+  }
+
+  /* Financial Metrics Grid */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .metric-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .metric-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+  }
+
+  .metric-name {
+    font-size: 0.8rem;
+    color: #94A3B8;
+    margin-bottom: 0.25rem;
+  }
+
+  .metric-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  /* AI Insights */
+  .insight-card {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(139, 92, 246, 0.1));
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .insight-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
+  }
+
+  .insight-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  .insight-text {
+    font-size: 0.9rem;
+    color: #E2E8F0;
+    line-height: 1.4;
+  }
+
+  /* Progress Bars */
+  .progress-item {
+    margin-bottom: 1rem;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-label {
+    font-size: 0.9rem;
+    color: #94A3B8;
+  }
+
+  .progress-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: 3px;
+    transition: width 1s ease-in-out;
+    animation: progressFill 2s ease-in-out;
+  }
+
+  @keyframes progressFill {
+    from { width: 0%; }
+    to { width: var(--progress-width); }
+  }
+
+  /* Action Buttons */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .action-btn {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--border-glow);
+    border-color: rgba(0, 212, 255, 0.3);
+  }
+
+  .action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: var(--primary-gradient);
+    opacity: 0.1;
+    transition: left 0.5s ease;
+  }
+
+  .action-btn:hover::before {
+    left: 0;
+  }
+
+  .action-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .action-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .action-desc {
+    font-size: 0.8rem;
+    color: #94A3B8;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .command-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .kpi-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Loading Animation */
+  .loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(11, 17, 32, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .loading-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #00D4FF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+
+<!-- Animated Background -->
+<div class="dashboard-bg"></div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- Command Center Header -->
+<div class="command-center">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <h1 class="mb-0" style="font-size: 2rem; font-weight: 800; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        <i class="fas fa-rocket me-3"></i>Enterprise Command Center
+      </h1>
+      <p class="mb-0 mt-2" style="color: #94A3B8; font-size: 1.1rem;">
+        Real-time financial intelligence & AI-powered decision making
+      </p>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="d-flex align-items-center justify-content-end gap-3">
+        <div class="text-end">
+          <div style="font-size: 0.9rem; color: #94A3B8;">Last Updated</div>
+          <div style="font-size: 1rem; font-weight: 600; color: white;">{{ company.last_analytics_update.strftime('%H:%M:%S') if company.last_analytics_update else 'Never' }}</div>
+        </div>
+        <button class="btn btn-primary" onclick="refreshAnalytics()" style="background: var(--primary-gradient); border: none; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600;">
+          <i class="fas fa-sync-alt me-2"></i>Refresh Analytics
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Grid -->
+<div class="kpi-grid">
+  <!-- Revenue KPI -->
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <i class="fas fa-dollar-sign"></i>
+    </div>
+    <div class="kpi-value">{{ "${:,.0f}".format(company.annual_revenue) }}</div>
+    <div class="kpi-label">Annual Revenue</div>
+    <div class="kpi-change positive">
+      <i class="fas fa-arrow-up"></i> {{ "{:.1f}%".format(company.revenue_growth_rate) if company.revenue_growth_rate else "0.0%" }} Growth
+    </div>
+  </div>
+
+  <!-- Profitability KPI -->
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <i class="fas fa-chart-line"></i>
+    </div>
+    <div class="kpi-value">{{ "{:.1f}%".format(company.net_profit_margin) if company.net_profit_margin else "0.0%" }}</div>
+    <div class="kpi-label">Net Profit Margin</div>
+    <div class="kpi-change positive">
+      <i class="fas fa-arrow-up"></i> Healthy Margin
+    </div>
+  </div>
+
+  <!-- Valuation KPI -->
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <i class="fas fa-building"></i>
+    </div>
+    <div class="kpi-value">{{ "${:,.0f}".format(company.market_cap) if company.market_cap else "$0" }}</div>
+    <div class="kpi-label">Market Cap</div>
+    <div class="kpi-change positive">
+      <i class="fas fa-arrow-up"></i> Strong Valuation
+    </div>
+  </div>
+
+  <!-- Health Score KPI -->
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <i class="fas fa-heartbeat"></i>
+    </div>
+    <div class="kpi-value">{{ "{:.0f}/100".format(company.health_score) if company.health_score else "0/100" }}</div>
+    <div class="kpi-label">Financial Health</div>
+    <div class="kpi-change {% if company.health_score > 70 %}positive{% elif company.health_score > 40 %}warning{% else %}negative{% endif %}">
+      {% if company.health_score > 70 %}
+        <i class="fas fa-arrow-up"></i> Excellent
+      {% elif company.health_score > 40 %}
+        <i class="fas fa-minus"></i> Good
+      {% else %}
+        <i class="fas fa-arrow-down"></i> Needs Attention
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Advanced Metrics Row -->
+<div class="kpi-grid" style="margin-top: 2rem;">
+  <!-- Altman Z-Score -->
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #EF4444, #DC2626);">
+      <i class="fas fa-shield-alt"></i>
+    </div>
+    <div class="kpi-value">{{ "{:.2f}".format(company.altman_z_score) if company.altman_z_score else "N/A" }}</div>
+    <div class="kpi-label">Altman Z-Score</div>
+    <div class="kpi-change {% if company.altman_z_score > 2.99 %}positive{% elif company.altman_z_score > 1.81 %}warning{% else %}negative{% endif %}">
+      {% if company.altman_z_score > 2.99 %}
+        <i class="fas fa-check-circle"></i> Safe Zone
+      {% elif company.altman_z_score > 1.81 %}
+        <i class="fas fa-exclamation-triangle"></i> Grey Zone
+      {% else %}
+        <i class="fas fa-times-circle"></i> Distress Zone
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Piotroski F-Score -->
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #10B981, #059669);">
+      <i class="fas fa-star"></i>
+    </div>
+    <div class="kpi-value">{{ "{:.0f}/9".format(company.piotroski_f_score) if company.piotroski_f_score else "N/A" }}</div>
+    <div class="kpi-label">Piotroski F-Score</div>
+    <div class="kpi-change {% if company.piotroski_f_score >= 8 %}positive{% elif company.piotroski_f_score >= 6 %}warning{% else %}negative{% endif %}">
+      {% if company.piotroski_f_score >= 8 %}
+        <i class="fas fa-trophy"></i> Exceptional
+      {% elif company.piotroski_f_score >= 6 %}
+        <i class="fas fa-thumbs-up"></i> Strong
+      {% elif company.piotroski_f_score >= 4 %}
+        <i class="fas fa-minus"></i> Moderate
+      {% else %}
+        <i class="fas fa-thumbs-down"></i> Weak
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Beneish M-Score -->
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #F59E0B, #D97706);">
+      <i class="fas fa-search"></i>
+    </div>
+    <div class="kpi-value">{{ "{:.2f}".format(company.beneish_m_score) if company.beneish_m_score else "N/A" }}</div>
+    <div class="kpi-label">Beneish M-Score</div>
+    <div class="kpi-change {% if company.beneish_m_score < -2.22 %}positive{% elif company.beneish_m_score < -1.78 %}warning{% else %}negative{% endif %}">
+      {% if company.beneish_m_score < -2.22 %}
+        <i class="fas fa-shield-alt"></i> Low Risk
+      {% elif company.beneish_m_score < -1.78 %}
+        <i class="fas fa-exclamation-triangle"></i> Moderate Risk
+      {% else %}
+        <i class="fas fa-times-circle"></i> High Risk
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Economic Value Added -->
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);">
+      <i class="fas fa-coins"></i>
+    </div>
+    <div class="kpi-value">{{ "${:,.0f}".format(company.economic_value_added) if company.economic_value_added else "N/A" }}</div>
+    <div class="kpi-label">Economic Value Added</div>
+    <div class="kpi-change {% if company.economic_value_added > 0 %}positive{% else %}negative{% endif %}">
+      {% if company.economic_value_added > 0 %}
+        <i class="fas fa-arrow-up"></i> Creating Value
+      {% else %}
+        <i class="fas fa-arrow-down"></i> Destroying Value
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Valuation Metrics Row -->
+<div class="kpi-grid" style="margin-top: 2rem;">
+  <!-- Enterprise Value -->
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #6366F1, #4F46E5);">
+      <i class="fas fa-building"></i>
+    </div>
+    <div class="kpi-value">{{ "${:,.0f}".format(company.enterprise_value) if company.enterprise_value else "N/A" }}</div>
+    <div class="kpi-label">Enterprise Value</div>
+    <div class="kpi-change positive">
+      <i class="fas fa-info-circle"></i> Total Valuation
+    </div>
+  </div>
+
+  <!-- DCF Valuation -->
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #EC4899, #DB2777);">
+      <i class="fas fa-calculator"></i>
+    </div>
+    <div class="kpi-value">{{ "${:,.0f}".format(company.dcf_valuation) if company.dcf_valuation else "N/A" }}</div>
+    <div class="kpi-label">DCF Valuation</div>
+    <div class="kpi-change positive">
+      <i class="fas fa-chart-line"></i> Discounted Cash Flow
+    </div>
+  </div>
+
+  <!-- Monte Carlo Valuation -->
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #14B8A6, #0F766E);">
+      <i class="fas fa-dice"></i>
+    </div>
+    <div class="kpi-value">{{ "${:,.0f}".format(company.monte_carlo_valuation) if company.monte_carlo_valuation else "N/A" }}</div>
+    <div class="kpi-label">Monte Carlo Valuation</div>
+    <div class="kpi-change positive">
+      <i class="fas fa-chart-area"></i> Risk-Adjusted
+    </div>
+  </div>
+
+  <!-- Free Cash Flow -->
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #F97316, #EA580C);">
+      <i class="fas fa-water"></i>
+    </div>
+    <div class="kpi-value">{{ "${:,.0f}".format(company.free_cash_flow) if company.free_cash_flow else "N/A" }}</div>
+    <div class="kpi-label">Free Cash Flow</div>
+    <div class="kpi-change {% if company.free_cash_flow > 0 %}positive{% else %}negative{% endif %}">
+      {% if company.free_cash_flow > 0 %}
+        <i class="fas fa-arrow-up"></i> Strong
+      {% else %}
+        <i class="fas fa-arrow-down"></i> Weak
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+<!-- Command Grid -->
+<div class="command-grid">
+  <!-- Financial Overview -->
+  <div class="financial-overview">
+    <h2 class="section-title">
+      <i class="fas fa-chart-bar"></i> Financial Command Center
+    </h2>
+    
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <div class="metric-name">ROE (Return on Equity)</div>
+        <div class="metric-value">{{ "{:.2f}%".format(company.return_on_equity) if company.return_on_equity else "0.00%" }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">ROA (Return on Assets)</div>
+        <div class="metric-value">{{ "{:.2f}%".format(company.return_on_assets) if company.return_on_assets else "0.00%" }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">EBITDA Margin</div>
+        <div class="metric-value">{{ "{:.2f}%".format(company.ebitda_margin) if company.ebitda_margin else "0.00%" }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Current Ratio</div>
+        <div class="metric-value">{{ "{:.2f}".format(company.current_ratio) if company.current_ratio else "0.00" }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Debt-to-Equity</div>
+        <div class="metric-value">{{ "{:.2f}".format(company.debt_to_equity) if company.debt_to_equity else "0.00" }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Book Value</div>
+        <div class="metric-value">{{ "${:.2f}".format(company.book_value) if company.book_value else "$0.00" }}</div>
+      </div>
+    </div>
+
+    <!-- Progress Bars -->
+    <div class="mt-4">
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-label">Profitability Score</span>
+          <span class="progress-value">{{ "{:.0f}%".format(min(100, max(0, company.net_profit_margin * 2))) if company.net_profit_margin else "0%" }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="--progress-width: {{ min(100, max(0, company.net_profit_margin * 2)) }}%; width: {{ min(100, max(0, company.net_profit_margin * 2)) }}%;"></div>
+        </div>
+      </div>
+      
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-label">Liquidity Score</span>
+          <span class="progress-value">{{ "{:.0f}%".format(min(100, max(0, company.current_ratio * 50))) if company.current_ratio else "0%" }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="--progress-width: {{ min(100, max(0, company.current_ratio * 50)) }}%; width: {{ min(100, max(0, company.current_ratio * 50)) }}%;"></div>
+        </div>
+      </div>
+      
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-label">Leverage Score</span>
+          <span class="progress-value">{{ "{:.0f}%".format(max(0, 100 - (company.debt_to_equity * 50))) if company.debt_to_equity else "100%" }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="--progress-width: {{ max(0, 100 - (company.debt_to_equity * 50)) }}%; width: {{ max(0, 100 - (company.debt_to_equity * 50)) }}%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Predictions -->
+  <div class="ai-predictions">
+    <h2 class="section-title">
+      <i class="fas fa-brain"></i> AI Intelligence
+    </h2>
+    
+    <!-- Revenue Forecast -->
+    <div class="insight-card">
+      <div class="insight-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div class="insight-text">
+        <strong>30-Day Revenue Forecast:</strong> {{ "${:,.0f}".format(company.predicted_revenue_30d) if company.predicted_revenue_30d else "Calculating..." }}
+      </div>
+    </div>
+    
+    <div class="insight-card">
+      <div class="insight-icon">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="insight-text">
+        <strong>90-Day Revenue Forecast:</strong> {{ "${:,.0f}".format(company.predicted_revenue_90d) if company.predicted_revenue_90d else "Calculating..." }}
+      </div>
+    </div>
+    
+    <!-- Risk Score -->
+    <div class="insight-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border-color: rgba(239, 68, 68, 0.2);">
+      <div class="insight-icon" style="background: linear-gradient(135deg, #EF4444, #DC2626);">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="insight-text">
+        <strong>Risk Score:</strong> {{ "{:.1f}/100".format(company.risk_score) if company.risk_score else "Calculating..." }}
+        {% if company.risk_score > 70 %}
+          <span style="color: #EF4444;">High Risk - Immediate Action Required</span>
+        {% elif company.risk_score > 40 %}
+          <span style="color: #F59E0B;">Medium Risk - Monitor Closely</span>
+        {% else %}
+          <span style="color: #10B981;">Low Risk - Stable Operations</span>
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Opportunity Score -->
+    <div class="insight-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border-color: rgba(16, 185, 129, 0.2);">
+      <div class="insight-icon" style="background: linear-gradient(135deg, #10B981, #059669);">
+        <i class="fas fa-rocket"></i>
+      </div>
+      <div class="insight-text">
+        <strong>Opportunity Score:</strong> {{ "{:.1f}/100".format(company.opportunity_score) if company.opportunity_score else "Calculating..." }}
+        {% if company.opportunity_score > 70 %}
+          <span style="color: #10B981;">High Opportunity - Invest Aggressively</span>
+        {% elif company.opportunity_score > 40 %}
+          <span style="color: #F59E0B;">Moderate Opportunity - Strategic Growth</span>
+        {% else %}
+          <span style="color: #EF4444;">Low Opportunity - Focus on Stability</span>
+        {% endif %}
+      </div>
+    </div>
+</div>
+</div>
+
+<!-- Fortune 500 Advanced Metrics -->
+<div class="command-grid" style="margin-top: 2rem;">
+  <!-- Advanced Financial Ratios -->
+  <div class="financial-overview">
+    <h2 class="section-title">
+      <i class="fas fa-chess-king"></i> Fortune 500 Metrics
+    </h2>
+    
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <div class="metric-name">Altman Z-Score</div>
+        <div class="metric-value">{{ "{:.2f}".format(company.altman_z_score) if company.altman_z_score else "0.00" }}</div>
+        <div style="font-size: 0.7rem; color: #94A3B8; margin-top: 0.25rem;">
+          {% if company.altman_z_score > 2.99 %}Safe Zone
+          {% elif company.altman_z_score > 1.81 %}Grey Zone
+          {% else %}Distress Zone
+          {% endif %}
+        </div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Piotroski F-Score</div>
+        <div class="metric-value">{{ "{:.0f}/9".format(company.piotroski_f_score) if company.piotroski_f_score else "0/9" }}</div>
+        <div style="font-size: 0.7rem; color: #94A3B8; margin-top: 0.25rem;">
+          {% if company.piotroski_f_score >= 8 %}Exceptional
+          {% elif company.piotroski_f_score >= 6 %}Strong
+          {% elif company.piotroski_f_score >= 4 %}Moderate
+          {% else %}Weak
+          {% endif %}
+        </div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Beneish M-Score</div>
+        <div class="metric-value">{{ "{:.2f}".format(company.beneish_m_score) if company.beneish_m_score else "0.00" }}</div>
+        <div style="font-size: 0.7rem; color: #94A3B8; margin-top: 0.25rem;">
+          {% if company.beneish_m_score > -1.78 %}High Risk
+          {% elif company.beneish_m_score > -2.22 %}Moderate Risk
+          {% else %}Low Risk
+          {% endif %}
+        </div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Economic Value Added</div>
+        <div class="metric-value">{{ "${:,.0f}".format(company.economic_value_added) if company.economic_value_added else "$0" }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Free Cash Flow</div>
+        <div class="metric-value">{{ "${:,.0f}".format(company.free_cash_flow) if company.free_cash_flow else "$0" }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Real Options Value</div>
+        <div class="metric-value">{{ "${:,.0f}".format(company.real_options_value) if company.real_options_value else "$0" }}</div>
+      </div>
+    </div>
+    
+    <!-- Monte Carlo Results -->
+    {% if company.monte_carlo_valuation %}
+    <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 212, 255, 0.05); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 12px;">
+      <div style="font-size: 0.9rem; color: #94A3B8; margin-bottom: 0.5rem;">Monte Carlo Valuation (10,000 simulations)</div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+        <div>
+          <div style="font-size: 0.8rem; color: #94A3B8;">Mean Value</div>
+          <div style="font-size: 1rem; font-weight: 700; color: white;">{{ "${:,.0f}".format(company.monte_carlo_valuation.mean) }}</div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: #94A3B8;">95% CI Lower</div>
+          <div style="font-size: 1rem; font-weight: 700; color: white;">{{ "${:,.0f}".format(company.monte_carlo_valuation.ci_95_lower) }}</div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: #94A3B8;">95% CI Upper</div>
+          <div style="font-size: 1rem; font-weight: 700; color: white;">{{ "${:,.0f}".format(company.monte_carlo_valuation.ci_95_upper) }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- AI Model Performance -->
+  <div class="ai-predictions">
+    <h2 class="section-title">
+      <i class="fas fa-robot"></i> Model Performance
+    </h2>
+    
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <div class="metric-name">Prediction Accuracy</div>
+        <div class="metric-value">{{ "{:.1f}%".format(company.prediction_accuracy * 100) if company.prediction_accuracy else "0.0%" }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-name">Prediction Confidence</div>
+        <div class="metric-value">{{ "{:.1f}%".format(company.prediction_confidence * 100) if company.prediction_confidence else "0.0%" }}</div>
+      </div>
+    </div>
+    
+    <!-- Risk & Opportunity Levels -->
+    <div style="margin-top: 1rem;">
+      {% if company.risk_factors %}
+      <div class="insight-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border-color: rgba(239, 68, 68, 0.2);">
+        <div class="insight-icon" style="background: linear-gradient(135deg, #EF4444, #DC2626);">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="insight-text">
+          <strong>Risk Level:</strong> {{ company.risk_factors.overall_risk_level }}
+          {% if company.risk_factors.financial_risks %}
+          <br><small style="color: #94A3B8;">{{ company.risk_factors.financial_risks[0].description if company.risk_factors.financial_risks else "" }}</small>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      
+      {% if company.opportunity_factors %}
+      <div class="insight-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border-color: rgba(16, 185, 129, 0.2);">
+        <div class="insight-icon" style="background: linear-gradient(135deg, #10B981, #059669);">
+          <i class="fas fa-rocket"></i>
+        </div>
+        <div class="insight-text">
+          <strong>Opportunity Level:</strong> {{ company.opportunity_factors.overall_opportunity_level }}
+          {% if company.opportunity_factors.growth_opportunities %}
+          <br><small style="color: #94A3B8;">{{ company.opportunity_factors.growth_opportunities[0].description if company.opportunity_factors.growth_opportunities else "" }}</small>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- AI Recommendations -->
+{% if company.recommendations %}
+<div class="command-center" style="margin-top: 2rem;">
+  <h2 class="section-title">
+    <i class="fas fa-lightbulb"></i> AI Recommendations
+  </h2>
+  
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
+    {% for action in company.recommendations.immediate_actions %}
+    <div class="insight-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border-color: rgba(239, 68, 68, 0.3);">
+      <div class="insight-icon" style="background: linear-gradient(135deg, #EF4444, #DC2626);">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+      <div class="insight-text">
+        <strong>IMMEDIATE ACTION:</strong> {{ action.action }}
+        <br><small style="color: #94A3B8;">Timeline: {{ action.timeline }} | Priority: {{ action.priority }}</small>
+      </div>
+    </div>
+    {% endfor %}
+    
+    {% for goal in company.recommendations.short_term_goals %}
+    <div class="insight-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1)); border-color: rgba(245, 158, 11, 0.3);">
+      <div class="insight-icon" style="background: linear-gradient(135deg, #F59E0B, #D97706);">
+        <i class="fas fa-target"></i>
+      </div>
+      <div class="insight-text">
+        <strong>Short-Term Goal:</strong> {{ goal.action }}
+        <br><small style="color: #94A3B8;">Timeline: {{ goal.timeline }} | Priority: {{ goal.priority }}</small>
+      </div>
+    </div>
+    {% endfor %}
+    
+    {% for strategy in company.recommendations.long_term_strategy %}
+    <div class="insight-card" style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(139, 92, 246, 0.1)); border-color: rgba(0, 212, 255, 0.3);">
+      <div class="insight-icon" style="background: linear-gradient(135deg, #00D4FF, #8B5CF6);">
+        <i class="fas fa-chess-king"></i>
+      </div>
+      <div class="insight-text">
+        <strong>Long-Term Strategy:</strong> {{ strategy.action }}
+        <br><small style="color: #94A3B8;">Timeline: {{ strategy.timeline }} | Priority: {{ strategy.priority }}</small>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="action-grid">
+  <a href="/financial" class="action-btn">
+    <i class="fas fa-calculator action-icon"></i>
+    <div class="action-title">Financial Planning</div>
+    <div class="action-desc">Advanced budgeting & forecasting</div>
+  </a>
+  
+  <a href="/reports" class="action-btn">
+    <i class="fas fa-file-alt action-icon"></i>
+    <div class="action-title">AI Reports</div>
+    <div class="action-desc">Automated insights & analysis</div>
+  </a>
+  
+  <a href="/simulation" class="action-btn">
+    <i class="fas fa-chess action-icon"></i>
+    <div class="action-title">Scenario Planning</div>
+    <div class="action-desc">What-if analysis & modeling</div>
+  </a>
+  
+  <a href="/ai-insights" class="action-btn">
+    <i class="fas fa-robot action-icon"></i>
+    <div class="action-title">AI Advisor</div>
+    <div class="action-desc">Intelligent recommendations</div>
+  </a>
+</div>
+
+<!-- ECharts.js for Interactive Charts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<!-- Anime.js for Animations -->
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+
+<!-- Chart Containers -->
+<div class="command-grid" style="margin-top: 2rem;">
+  <div class="financial-overview">
+    <h2 class="section-title">
+      <i class="fas fa-chart-area"></i> Revenue & Profitability Trends
+    </h2>
+    <div id="revenueTrendChart" style="height: 350px;"></div>
+  </div>
+  
+  <div class="ai-predictions">
+    <h2 class="section-title">
+      <i class="fas fa-chart-pie"></i> Financial Health Breakdown
+    </h2>
+    <div id="healthPieChart" style="height: 350px;"></div>
+  </div>
+</div>
+
+<div class="command-center" style="margin-top: 2rem;">
+  <h2 class="section-title">
+    <i class="fas fa-chart-line"></i> Valuation Comparison & Monte Carlo Analysis
+  </h2>
+  <div id="valuationChart" style="height: 400px;"></div>
+</div>
+
+<!-- JavaScript for Interactions -->
+<script>
+// Initialize ECharts
+document.addEventListener('DOMContentLoaded', function() {
+  // Revenue Trend Chart
+  const revenueChart = echarts.init(document.getElementById('revenueTrendChart'));
+  const revenueOption = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(11, 17, 32, 0.9)',
+      borderColor: '#00D4FF',
+      textStyle: { color: '#E2E8F0' }
+    },
+    legend: {
+      data: ['Revenue', 'Net Income', 'EBITDA'],
+      textStyle: { color: '#94A3B8' }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: ['Q1', 'Q2', 'Q3', 'Q4'],
+      axisLine: { lineStyle: { color: '#94A3B8' } },
+      axisLabel: { color: '#94A3B8' }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: { lineStyle: { color: '#94A3B8' } },
+      axisLabel: { 
+        color: '#94A3B8',
+        formatter: function(value) {
+          return '$' + (value / 1e9).toFixed(1) + 'B';
+        }
+      },
+      splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)' } }
+    },
+    series: [
+      {
+        name: 'Revenue',
+        type: 'line',
+        data: [{{ company.annual_revenue * 0.2 }}, {{ company.annual_revenue * 0.25 }}, {{ company.annual_revenue * 0.25 }}, {{ company.annual_revenue * 0.3 }}],
+        lineStyle: { color: '#00D4FF', width: 3 },
+        itemStyle: { color: '#00D4FF' },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(0, 212, 255, 0.3)' },
+            { offset: 1, color: 'rgba(0, 212, 255, 0.05)' }
+          ])
+        }
+      },
+      {
+        name: 'Net Income',
+        type: 'line',
+        data: [{{ company.net_income * 0.15 }}, {{ company.net_income * 0.2 }}, {{ company.net_income * 0.3 }}, {{ company.net_income * 0.35 }}],
+        lineStyle: { color: '#10B981', width: 3 },
+        itemStyle: { color: '#10B981' }
+      },
+      {
+        name: 'EBITDA',
+        type: 'line',
+        data: [{{ company.ebitda * 0.2 }}, {{ company.ebitda * 0.25 }}, {{ company.ebitda * 0.25 }}, {{ company.ebitda * 0.3 }}],
+        lineStyle: { color: '#8B5CF6', width: 3 },
+        itemStyle: { color: '#8B5CF6' }
+      }
+    ]
+  };
+  revenueChart.setOption(revenueOption);
+
+  // Financial Health Pie Chart
+  const healthChart = echarts.init(document.getElementById('healthPieChart'));
+  const healthOption = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: 'rgba(11, 17, 32, 0.9)',
+      borderColor: '#00D4FF',
+      textStyle: { color: '#E2E8F0' }
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left',
+      textStyle: { color: '#94A3B8' }
+    },
+    series: [
+      {
+        name: 'Financial Health',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['60%', '50%'],
+        data: [
+          { value: {{ company.profitability_score or 25 }}, name: 'Profitability', itemStyle: { color: '#00D4FF' } },
+          { value: {{ company.liquidity_score or 25 }}, name: 'Liquidity', itemStyle: { color: '#10B981' } },
+          { value: {{ company.leverage_score or 25 }}, name: 'Leverage', itemStyle: { color: '#8B5CF6' } },
+          { value: {{ company.efficiency_score or 25 }}, name: 'Efficiency', itemStyle: { color: '#F59E0B' } }
+        ],
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 212, 255, 0.5)'
+          }
+        },
+        label: {
+          color: '#E2E8F0'
+        }
+      }
+    ]
+  };
+  healthChart.setOption(healthOption);
+
+  // Valuation Comparison Chart
+  const valuationChart = echarts.init(document.getElementById('valuationChart'));
+  const valuationOption = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(11, 17, 32, 0.9)',
+      borderColor: '#00D4FF',
+      textStyle: { color: '#E2E8F0' }
+    },
+    legend: {
+      data: ['Market Cap', 'DCF Valuation', 'Monte Carlo Mean', '95% CI Lower', '95% CI Upper'],
+      textStyle: { color: '#94A3B8' }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: ['Current Valuation'],
+      axisLine: { lineStyle: { color: '#94A3B8' } },
+      axisLabel: { color: '#94A3B8' }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: { lineStyle: { color: '#94A3B8' } },
+      axisLabel: { 
+        color: '#94A3B8',
+        formatter: function(value) {
+          return '$' + (value / 1e9).toFixed(1) + 'B';
+        }
+      },
+      splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)' } }
+    },
+    series: [
+      {
+        name: 'Market Cap',
+        type: 'bar',
+        data: [{{ company.market_cap or 0 }}],
+        itemStyle: { color: '#00D4FF' }
+      },
+      {
+        name: 'DCF Valuation',
+        type: 'bar',
+        data: [{{ company.dcf_valuation or 0 }}],
+        itemStyle: { color: '#10B981' }
+      },
+      {
+        name: 'Monte Carlo Mean',
+        type: 'bar',
+        data: [{{ company.monte_carlo_valuation or 0 }}],
+        itemStyle: { color: '#8B5CF6' }
+      }
+    ]
+  };
+  
+  // Add Monte Carlo confidence intervals if available
+  {% if company.monte_carlo_valuation and company.monte_carlo_valuation.ci_95_lower %}
+  valuationOption.series.push({
+    name: '95% CI Lower',
+    type: 'bar',
+    data: [{{ company.monte_carlo_valuation.ci_95_lower }}],
+    itemStyle: { color: 'rgba(239, 68, 68, 0.5)' }
+  });
+  valuationOption.series.push({
+    name: '95% CI Upper',
+    type: 'bar',
+    data: [{{ company.monte_carlo_valuation.ci_95_upper }}],
+    itemStyle: { color: 'rgba(239, 68, 68, 0.5)' }
+  });
+  {% endif %}
+  
+  valuationChart.setOption(valuationOption);
+
+  // Make charts responsive
+  window.addEventListener('resize', function() {
+    revenueChart.resize();
+    healthChart.resize();
+    valuationChart.resize();
+  });
+});
+
+// Anime.js Animations
+function refreshAnalytics() {
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  loadingOverlay.classList.add('active');
+  
+  // Animate loading spinner
+  anime({
+    targets: '.loading-spinner',
+    rotate: 360,
+    duration: 1000,
+    easing: 'linear',
+    loop: true
+  });
+  
+  // Simulate API call
+  setTimeout(() => {
+    loadingOverlay.classList.remove('active');
+    
+    // Animate KPI cards update
+    anime({
+      targets: '.kpi-card',
+      scale: [0.95, 1],
+      opacity: [0.7, 1],
+      duration: 600,
+      delay: anime.stagger(100),
+      easing: 'easeOutElastic(1, .8)'
+    });
+    
+    // Show success notification
+    showNotification('Analytics refreshed successfully!', 'success');
+  }, 2000);
+}
+
+function showNotification(message, type) {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    z-index: 10000;
+    transform: translateX(400px);
+    opacity: 0;
+  `;
+  
+  if (type === 'success') {
+    notification.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+  } else if (type === 'error') {
+    notification.style.background = 'linear-gradient(135deg, #EF4444, #DC2626)';
+  } else {
+    notification.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
+  }
+  
+  document.body.appendChild(notification);
+  
+  // Animate notification
+  anime({
+    targets: notification,
+    translateX: 0,
+    opacity: 1,
+    duration: 500,
+    easing: 'easeOutBack',
+    complete: function() {
+      setTimeout(() => {
+        anime({
+          targets: notification,
+          translateX: 400,
+          opacity: 0,
+          duration: 300,
+          complete: function() {
+            notification.remove();
+          }
+        });
+      }, 3000);
+    }
+  });
+}
+
+// Add hover effects to KPI cards with Anime.js
+document.querySelectorAll('.kpi-card').forEach(card => {
+  card.addEventListener('mouseenter', function() {
+    anime({
+      targets: this,
+      translateY: -5,
+      scale: 1.02,
+      duration: 300,
+      easing: 'easeOutQuad'
+    });
+    
+    // Animate icon
+    anime({
+      targets: this.querySelector('.kpi-icon'),
+      scale: 1.1,
+      rotate: '5deg',
+      duration: 300,
+      easing: 'easeOutBack'
+    });
+  });
+  
+  card.addEventListener('mouseleave', function() {
+    anime({
+      targets: this,
+      translateY: 0,
+      scale: 1,
+      duration: 300,
+      easing: 'easeOutQuad'
+    });
+    
+    // Reset icon
+    anime({
+      targets: this.querySelector('.kpi-icon'),
+      scale: 1,
+      rotate: '0deg',
+      duration: 300,
+      easing: 'easeOutBack'
+    });
+  });
+});
+
+// Animate progress bars on load
+document.addEventListener('DOMContentLoaded', function() {
+  const progressBars = document.querySelectorAll('.progress-fill');
+  progressBars.forEach((bar, index) => {
+    setTimeout(() => {
+      anime({
+        targets: bar,
+        width: bar.style.getPropertyValue('--progress-width'),
+        duration: 1500,
+        delay: index * 200,
+        easing: 'easeOutQuart'
+      });
+    }, 500);
+  });
+  
+  // Animate KPI cards on initial load
+  anime({
+    targets: '.kpi-card',
+    translateY: [50, 0],
+    opacity: [0, 1],
+    duration: 800,
+    delay: anime.stagger(100),
+    easing: 'easeOutExpo'
+  });
+  
+  // Animate command grid sections
+  anime({
+    targets: '.financial-overview',
+    translateX: [-50, 0],
+    opacity: [0, 1],
+    duration: 1000,
+    delay: 400,
+    easing: 'easeOutExpo'
+  });
+  
+  anime({
+    targets: '.ai-predictions',
+    translateX: [50, 0],
+    opacity: [0, 1],
+    duration: 1000,
+    delay: 500,
+    easing: 'easeOutExpo'
+  });
+});
+
+// Add click animations to action buttons
+document.querySelectorAll('.action-btn').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Create ripple effect
+    const ripple = document.createElement('span');
+    const rect = this.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+    
+    ripple.style.cssText = `
+      position: absolute;
+      width: ${size}px;
+      height: ${size}px;
+      left: ${x}px;
+      top: ${y}px;
+      background: rgba(0, 212, 255, 0.3);
+      border-radius: 50%;
+      transform: scale(0);
+      pointer-events: none;
+    `;
+    
+    this.style.position = 'relative';
+    this.style.overflow = 'hidden';
+    this.appendChild(ripple);
+    
+    anime({
+      targets: ripple,
+      scale: [0, 1],
+      opacity: [0.3, 0],
+      duration: 600,
+      easing: 'easeOutExpo',
+      complete: function() {
+        ripple.remove();
+      }
+    });
+    
+    // Navigate after animation
+    setTimeout(() => {
+      window.location.href = this.href;
+    }, 300);
+  });
+});
+
+// Add tooltip functionality
+document.querySelectorAll('.metric-item, .insight-card').forEach(element => {
+  element.addEventListener('mouseenter', function() {
+    // Create tooltip
+    const tooltip = document.createElement('div');
+    tooltip.className = 'custom-tooltip';
+    tooltip.textContent = this.getAttribute('data-tooltip') || 'Click for more details';
+    tooltip.style.cssText = `
+      position: absolute;
+      background: rgba(11, 17, 32, 0.95);
+      color: #E2E8F0;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(10px);
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    const rect = this.getBoundingClientRect();
+    tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+    
+    anime({
+      targets: tooltip,
+      opacity: 1,
+      translateY: 0,
+      duration: 200,
+      easing: 'easeOutQuad'
+    });
+    
+    this.tooltip = tooltip;
+  });
+  
+  element.addEventListener('mouseleave', function() {
+    if (this.tooltip) {
+      anime({
+        targets: this.tooltip,
+        opacity: 0,
+        translateY: 10,
+        duration: 200,
+        complete: () => {
+          this.tooltip.remove();
+          this.tooltip = null;
+        }
+      });
+    }
+  });
+});
+</script>
+
+
+{% endblock %}

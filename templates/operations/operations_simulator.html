@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+{% block title %}Operations Simulator{% endblock %}
+{% block page_title %}Operations Simulator{% endblock %}
+
+{% block content %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<style>
+  :root {
+    --glass-bg: rgba(20, 20, 35, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent: #667eea;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+  }
+  
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .metric-card {
+    background: rgba(15, 15, 30, 0.5);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s;
+  }
+  
+  .metric-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  
+  .metric-label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .metric-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+  }
+  
+  .dept-card {
+    background: rgba(15, 15, 30, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    transition: all 0.25s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .dept-card:hover {
+    border-color: rgba(102, 126, 234, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+  
+  .dept-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--dept-color, var(--accent));
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  
+  .dept-card:hover::before {
+    opacity: 1;
+  }
+  
+  .dept-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  
+  .progress-track {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1s ease-out;
+    position: relative;
+    background: var(--bar-color, var(--accent));
+  }
+  
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25));
+    border-radius: 0 5px 5px 0;
+  }
+  
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+    color: var(--text-secondary);
+  }
+  
+  .badge-glass {
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  
+  .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+  .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+  .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+  .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); border-color: rgba(59, 130, 246, 0.3); }
+  
+  .section-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+  }
+  
+  .insight-banner {
+    background: rgba(102, 126, 234, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 1rem 1.25rem;
+  }
+  
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  }
+  
+  .stat-row:last-child {
+    border-bottom: none;
+  }
+  
+  .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+  
+  .stat-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="text-white m-0" style="font-weight: 700;">Operations Simulator</h2>
+      <p class="mb-0" style="color: var(--text-secondary); font-size: 0.9rem;">
+        Departmental budget utilization, headcount, and operational efficiency
+      </p>
+    </div>
+    <span class="badge-glass badge-info" style="font-size: 0.8rem;">
+      {{ summary.total_departments }} Departments · {{ summary.total_employees }} Employees
+    </span>
+  </div>
+
+  <!-- Top Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Total Annual Budget</div>
+        <div class="metric-value">{{ currency_symbol }}{{ "{:,.0f}".format(summary.total_budget) }}</div>
+        <div class="metric-sub">Across all departments</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Total Spent (YTD)</div>
+        <div class="metric-value" style="color: {% if summary.overall_utilization > 90 %}var(--danger){% elif summary.overall_utilization > 75 %}var(--warning){% else %}var(--success){% endif %};">
+          {{ currency_symbol }}{{ "{:,.0f}".format(summary.total_spent) }}
+        </div>
+        <div class="metric-sub">{{ "{:.1f}%".format(summary.overall_utilization) }} utilized</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Remaining Budget</div>
+        <div class="metric-value">{{ currency_symbol }}{{ "{:,.0f}".format(summary.total_remaining) }}</div>
+        <div class="metric-sub">{{ "{:.1f}%".format(100 - summary.overall_utilization) }} available</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Cost per Employee</div>
+        <div class="metric-value">{{ currency_symbol }}{{ "{:,.0f}".format(summary.avg_cost_per_employee) }}</div>
+        <div class="metric-sub">Average across all depts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overall Progress -->
+  <div class="glass-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="section-title m-0"><i class="fas fa-chart-pie me-2" style="color: var(--accent);"></i>Overall Budget Burn</h5>
+      <span class="badge-glass {% if summary.overall_utilization > 90 %}badge-danger{% elif summary.overall_utilization > 75 %}badge-warning{% elif summary.overall_utilization > 50 %}badge-info{% else %}badge-success{% endif %}">
+        {{ "{:.1f}%".format(summary.overall_utilization) }} Utilized
+      </span>
+    </div>
+    <div class="progress-track" style="height: 14px;">
+      <div class="progress-fill" style="width: {{ summary.overall_utilization }}%; background: {% if summary.overall_utilization > 90 %}var(--danger){% elif summary.overall_utilization > 75 %}var(--warning){% elif summary.overall_utilization > 50 %}var(--info){% else %}var(--success){% endif %};"></div>
+    </div>
+    <div class="progress-labels">
+      <span>{{ currency_symbol }}0</span>
+      <span style="font-weight: 600; color: var(--text-primary);">{{ currency_symbol }}{{ "{:,.0f}".format(summary.total_spent) }} spent</span>
+      <span>{{ currency_symbol }}{{ "{:,.0f}".format(summary.total_budget) }}</span>
+    </div>
+  </div>
+
+  <!-- Insight Banner -->
+  <div class="insight-banner mb-4">
+    <div class="d-flex align-items-start gap-3">
+      <i class="fas fa-lightbulb mt-1" style="color: var(--warning);"></i>
+      <div>
+        <p class="mb-1" style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">
+          Operational Insight
+        </p>
+        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">
+          {% if summary.overall_utilization > 95 %}
+            <span style="color: var(--danger); font-weight: 600;">Critical:</span> Overall budget is nearly exhausted. Immediate spending freeze or budget reallocation required to avoid overruns.
+          {% elif summary.overall_utilization > 80 %}
+            <span style="color: var(--warning); font-weight: 600;">Caution:</span> Budget utilization is high. Review discretionary spending and defer non-essential investments.
+          {% elif summary.overall_utilization > 50 %}
+            Operations are tracking within normal parameters. Continue monitoring department-level burn rates monthly.
+          {% else %}
+            Budget utilization is conservative. Consider accelerating strategic initiatives or increasing team capacity if revenue supports it.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department Cards -->
+  <div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h5 class="section-title m-0"><i class="fas fa-building me-2" style="color: var(--accent);"></i>Department Breakdown</h5>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Sorted by utilization (highest first)</span>
+    </div>
+    
+    <div class="row g-4">
+      {% for dept in departments %}
+      <div class="col-md-6 col-lg-4">
+        <div class="dept-card" style="--dept-color: {{ dept.color }}; --bar-color: {{ dept.bar_color }};">
+          <!-- Header -->
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="dept-icon" style="background: {{ dept.color }}20; color: {{ dept.color }};">
+              <i class="fas fa-building"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="mb-0" style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">{{ dept.name }}</h6>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                  <i class="fas fa-users me-1"></i>{{ dept.employee_count }} employees
+                </small>
+                <span class="badge-glass {% if dept.status == 'Over Budget' %}badge-danger{% elif dept.status == 'High Utilization' %}badge-warning{% elif dept.status == 'On Track' %}badge-info{% else %}badge-success{% endif %}" style="font-size: 0.65rem;">
+                  {{ dept.status }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Budget Utilization Bar -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-end mb-2">
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">Budget Utilization</span>
+              <span style="font-weight: 700; font-size: 1.1rem; color: {{ dept.bar_color }};">
+                {{ "{:.1f}%".format(dept.utilization) }}
+              </span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: {{ dept.utilization_display }}%;"></div>
+            </div>
+            <div class="progress-labels">
+              <span>{{ currency_symbol }}{{ "{:,.0f}".format(dept.spent) }} spent</span>
+              <span>{{ currency_symbol }}{{ "{:,.0f}".format(dept.remaining) }} left</span>
+            </div>
+          </div>
+          
+          <!-- Stats Grid -->
+          <div class="mt-3 pt-3" style="border-top: 1px solid var(--glass-border);">
+            <div class="stat-row">
+              <span class="stat-label"><i class="fas fa-wallet me-2" style="color: var(--text-secondary); opacity: 0.6;"></i>Annual Budget</span>
+              <span class="stat-value">{{ currency_symbol }}{{ "{:,.0f}".format(dept.budget) }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label"><i class="fas fa-money-bill-wave me-2" style="color: var(--text-secondary); opacity: 0.6;"></i>Payroll (YTD)</span>
+              <span class="stat-value">{{ currency_symbol }}{{ "{:,.0f}".format(dept.payroll) }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label"><i class="fas fa-receipt me-2" style="color: var(--text-secondary); opacity: 0.6;"></i>Other Expenses</span>
+              <span class="stat-value">{{ currency_symbol }}{{ "{:,.0f}".format(dept.other_expenses) }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label"><i class="fas fa-user-tag me-2" style="color: var(--text-secondary); opacity: 0.6;"></i>Cost / Employee</span>
+              <span class="stat-value">{{ currency_symbol }}{{ "{:,.0f}".format(dept.cost_per_employee) }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label"><i class="fas fa-hourglass-half me-2" style="color: var(--text-secondary); opacity: 0.6;"></i>Runway (months)</span>
+              <span class="stat-value" style="color: {% if dept.runway_months < 3 %}var(--danger){% elif dept.runway_months < 6 %}var(--warning){% else %}var(--success){% endif %};">
+                {{ "{:.1f}".format(dept.runway_months) }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Mini insight -->
+          <div class="mt-3" style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 8px;">
+            {% if dept.utilization > 95 %}
+              <i class="fas fa-triangle-exclamation me-1" style="color: var(--danger);"></i>
+              Department is over budget. Consider headcount freeze or vendor renegotiation.
+            {% elif dept.utilization > 80 %}
+              <i class="fas fa-circle-exclamation me-1" style="color: var(--warning);"></i>
+              Approaching budget limit. Review Q3–Q4 discretionary spend.
+            {% elif dept.employee_count == 0 %}
+              <i class="fas fa-circle-info me-1" style="color: var(--info);"></i>
+              No active employees assigned. Verify department structure.
+            {% else %}
+              <i class="fas fa-check-circle me-1" style="color: var(--success);"></i>
+              Department is operating within budget parameters.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    {% if not departments %}
+    <div class="text-center py-5">
+      <i class="fas fa-building mb-3" style="font-size: 3rem; opacity: 0.3; color: var(--text-secondary);"></i>
+      <p class="mb-1" style="font-weight: 600; color: var(--text-primary);">No active departments</p>
+      <p class="mb-0" style="color: var(--text-secondary); font-size: 0.875rem;">Configure departments and assign employees to see operational metrics.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

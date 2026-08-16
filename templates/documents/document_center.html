@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Documents{% endblock %}
+{% block page_title %}Document Center{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="glass-card p-4">
+            <h5 class="mb-4" style="font-weight: 600;">Upload Document</h5>
+            <form method="POST" action="{{ url_for('documents.upload') }}" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label">Select File</label>
+                    <input type="file" class="form-control-glass" name="file" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Document Name</label>
+                    <input type="text" class="form-control-glass" name="name" placeholder="Optional - uses filename if blank">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    <input type="text" class="form-control-glass" name="category" placeholder="e.g. Financial, Legal">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control-glass" name="description" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn-glass w-100"><i class="fas fa-upload me-2"></i>Upload</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 style="font-weight: 600;">Documents</h5>
+                <form method="GET" class="d-flex gap-2">
+                    <input type="text" class="form-control-glass" name="search" placeholder="Search..." value="{{ request.args.get('search', '') }}" style="width: 200px;">
+                    <button type="submit" class="btn btn-outline-glass"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
+            {% if documents %}
+            <table class="table-glass">
+                <thead><tr><th>Name</th><th>Type</th><th>Category</th><th>Size</th><th>Actions</th></tr></thead>
+                <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td style="font-weight: 500;"><i class="fas fa-file{% if doc.file_type == 'pdf' %}-pdf{% elif doc.file_type in ['xlsx','xls','csv'] %}-excel{% elif doc.file_type == 'docx' %}-word{% elif doc.file_type in ['png','jpg','jpeg'] %}-image{% else %}{% endif %} me-2" style="color: var(--accent-primary);"></i>{{ doc.name }}</td>
+                    <td><span class="badge-glass badge-info">{{ doc.file_type|upper }}</span></td>
+                    <td>{{ doc.category or '-' }}</td>
+                    <td>{% if doc.file_size %}{{ (doc.file_size / 1024)|round(1) }} KB{% else %}-{% endif %}</td>
+                    <td><a href="{{ url_for('documents.download', doc_id=doc.id) }}" class="btn btn-sm btn-outline-glass"><i class="fas fa-download"></i></a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-center" style="color: var(--text-secondary);">No documents uploaded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

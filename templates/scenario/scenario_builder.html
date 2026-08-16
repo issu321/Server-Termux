@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Scenario Builder{% endblock %}
+{% block page_title %}Scenario Builder{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="glass-card p-4">
+            <h5 class="mb-4" style="font-weight: 600;">Create Scenario</h5>
+            <form method="POST" action="{{ url_for('scenario_builder.create') }}">
+                <div class="mb-3"><label class="form-label">Scenario Name</label><input type="text" class="form-control-glass" name="name" required></div>
+                <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control-glass" name="description" rows="3"></textarea></div>
+                <div class="mb-3"><label class="form-label">Type</label><select class="form-control-glass" name="scenario_type"><option>Strategic</option><option>Operational</option><option>Financial</option><option>Market</option></select></div>
+                <button type="submit" class="btn-glass w-100"><i class="fas fa-plus me-2"></i>Create Scenario</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="glass-card p-4">
+            <h5 class="mb-3" style="font-weight: 600;">Saved Scenarios</h5>
+            {% if scenarios %}
+            <table class="table-glass">
+                <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Created</th></tr></thead>
+                <tbody>
+                {% for s in scenarios %}
+                <tr><td style="font-weight: 500;">{{ s.name }}</td><td><span class="badge-glass badge-info">{{ s.scenario_type }}</span></td><td><span class="badge-glass {% if s.is_active %}badge-success{% else %}badge-warning{% endif %}">{{ 'Active' if s.is_active else 'Inactive' }}</span></td><td>{{ s.created_at.strftime('%Y-%m-%d') }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-center" style="color: var(--text-secondary);">No scenarios created yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

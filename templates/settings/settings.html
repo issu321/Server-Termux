@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-3">
+        <div class="glass-card p-3">
+            <div class="nav flex-column nav-pills" id="settingsTab" role="tablist">
+                <button class="btn btn-outline-glass text-start mb-2 active" data-bs-toggle="pill" data-bs-target="#company-tab">
+                    <i class="fas fa-building me-2"></i>Company
+                </button>
+                <button class="btn btn-outline-glass text-start mb-2" data-bs-toggle="pill" data-bs-target="#profile-tab">
+                    <i class="fas fa-user me-2"></i>Profile
+                </button>
+                <button class="btn btn-outline-glass text-start mb-2" data-bs-toggle="pill" data-bs-target="#theme-tab">
+                    <i class="fas fa-palette me-2"></i>Theme
+                </button>
+                <button class="btn btn-outline-glass text-start" data-bs-toggle="pill" data-bs-target="#security-tab">
+                    <i class="fas fa-lock me-2"></i>Security
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-9">
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="company-tab">
+                <div class="glass-card p-4">
+                    <h5 class="mb-4" style="font-weight: 600;">Company Settings</h5>
+                    <form method="POST" action="{{ url_for('settings.update_company') }}">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label">Company Name</label><input type="text" class="form-control-glass" name="company_name" value="{{ company.company_name if company else '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">Business Name</label><input type="text" class="form-control-glass" name="business_name" value="{{ company.business_name if company else '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">Industry</label><select class="form-control-glass" name="industry"><option>{{ company.industry if company else 'Technology' }}</option><option>Technology</option><option>Manufacturing</option><option>Retail</option><option>Finance</option><option>Healthcare</option><option>Other</option></select></div>
+                            <div class="col-md-6"><label class="form-label">Business Type</label><select class="form-control-glass" name="business_type"><option>{{ company.business_type if company else 'Startup' }}</option><option>Startup</option><option>LLC</option><option>Corporation</option><option>Partnership</option></select></div>
+                            <div class="col-md-6"><label class="form-label">Employee Count</label><input type="number" class="form-control-glass" name="employee_count" value="{{ company.employee_count if company else 0 }}"></div>
+                            <div class="col-md-6"><label class="form-label">Annual Revenue</label><input type="number" class="form-control-glass" name="annual_revenue" value="{{ company.annual_revenue if company else 0 }}"></div>
+                            <div class="col-md-6"><label class="form-label">Country</label><input type="text" class="form-control-glass" name="country" value="{{ company.country if company else '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">City</label><input type="text" class="form-control-glass" name="city" value="{{ company.city if company else '' }}"></div>
+                            <div class="col-12"><button type="submit" class="btn-glass"><i class="fas fa-save me-2"></i>Save Changes</button></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="profile-tab">
+                <div class="glass-card p-4">
+                    <h5 class="mb-4" style="font-weight: 600;">Profile Settings</h5>
+                    <form method="POST" action="{{ url_for('settings.update_profile') }}">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label">First Name</label><input type="text" class="form-control-glass" name="first_name" value="{{ current_user.first_name or '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">Last Name</label><input type="text" class="form-control-glass" name="last_name" value="{{ current_user.last_name or '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control-glass" name="email" value="{{ current_user.email }}"></div>
+                            <div class="col-md-6"><label class="form-label">Username</label><input type="text" class="form-control-glass" value="{{ current_user.username }}" disabled></div>
+                            <div class="col-12"><hr style="border-color: var(--border-color);"></div>
+                            <div class="col-md-6"><label class="form-label">New Password</label><input type="password" class="form-control-glass" name="new_password" placeholder="Leave blank to keep current"></div>
+                            <div class="col-md-6"><label class="form-label">Confirm Password</label><input type="password" class="form-control-glass" name="confirm_password"></div>
+                            <div class="col-12"><button type="submit" class="btn-glass"><i class="fas fa-save me-2"></i>Update Profile</button></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="theme-tab">
+                <div class="glass-card p-4">
+                    <h5 class="mb-4" style="font-weight: 600;">Theme Settings</h5>
+                    <div class="row g-3">
+                        {% for tid, t in themes.items() %}
+                        <div class="col-md-6">
+                            <div class="glass-card p-3 {% if theme_id == tid %}border-primary{% endif %}" style="cursor: pointer; border: 2px solid {% if theme_id == tid %}var(--accent-primary){% else %}transparent{% endif %};" onclick="setTheme('{{ tid }}')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div style="width: 40px; height: 40px; border-radius: 10px; background: {{ t.gradient }}; border: 1px solid var(--border-color);"></div>
+                                    <div><div style="font-weight: 600;">{{ t.name }}</div><small style="color: var(--text-secondary);">{{ t.accent_primary }} / {{ t.accent_secondary }}</small></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="security-tab">
+                <div class="glass-card p-4">
+                    <h5 class="mb-4" style="font-weight: 600;">Security Settings</h5>
+                    <div class="mb-3"><label class="form-label">Role</label><input type="text" class="form-control-glass" value="{{ current_user.role }}" disabled></div>
+                    <div class="mb-3"><label class="form-label">Admin Status</label><input type="text" class="form-control-glass" value="{{ 'Yes' if current_user.is_admin else 'No' }}" disabled></div>
+                    <div class="mb-3"><label class="form-label">Account Status</label><input type="text" class="form-control-glass" value="{{ 'Active' if current_user.is_active else 'Inactive' }}" disabled></div>
+                    <div class="mb-3"><label class="form-label">Last Login</label><input type="text" class="form-control-glass" value="{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login else 'Never' }}" disabled></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

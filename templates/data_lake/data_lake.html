@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Data Lake{% endblock %}
+{% block page_title %}Data Lake{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center">
+            <i class="fas fa-file-alt mb-3" style="font-size: 36px; color: var(--accent-primary);"></i>
+            <h5 style="font-weight: 600;">{{ document_count }}</h5>
+            <small style="color: var(--text-secondary);">Documents Stored</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center">
+            <i class="fas fa-upload mb-3" style="font-size: 36px; color: #10B981;"></i>
+            <h5 style="font-weight: 600;">{{ imports|length }}</h5>
+            <small style="color: var(--text-secondary);">Import Operations</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center">
+            <i class="fas fa-database mb-3" style="font-size: 36px; color: #8B5CF6;"></i>
+            <h5 style="font-weight: 600;">SQLite</h5>
+            <small style="color: var(--text-secondary);">Database Engine</small>
+        </div>
+    </div>
+</div>
+<div class="glass-card p-4 mt-4">
+    <h5 class="mb-3" style="font-weight: 600;">Recent Imports</h5>
+    {% if imports %}
+    <table class="table-glass">
+        <thead><tr><th>Type</th><th>File</th><th>Records</th><th>Success</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for i in imports %}
+        <tr><td>{{ i.import_type }}</td><td>{{ i.file_name or '-' }}</td><td>{{ i.record_count or '-' }}</td><td>{{ i.success_count }}</td><td><span class="badge-glass {% if i.status == 'completed' %}badge-success{% elif i.status == 'processing' %}badge-info{% else %}badge-danger{% endif %}">{{ i.status|title }}</span></td><td>{{ i.created_at.strftime('%Y-%m-%d') }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-center" style="color: var(--text-secondary);">No imports yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

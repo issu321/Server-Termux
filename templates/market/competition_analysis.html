@@ -1,0 +1,553 @@
+{% extends "base.html" %}
+{% block title %}Competition Analysis{% endblock %}
+{% block page_title %}Competition Analysis{% endblock %}
+
+{% block content %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<style>
+  :root {
+    --glass-bg: rgba(20, 20, 35, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent: #667eea;
+    --accent-glow: rgba(102, 126, 234, 0.3);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+  }
+  
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .metric-card {
+    background: rgba(15, 15, 30, 0.5);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s;
+  }
+  
+  .metric-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  
+  .metric-label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .metric-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+  }
+  
+  .badge-glass {
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  
+  .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+  .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+  .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+  .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); border-color: rgba(59, 130, 246, 0.3); }
+  .badge-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: rgba(139, 92, 246, 0.3); }
+  
+  .insight-banner {
+    background: rgba(102, 126, 234, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease-out;
+    position: relative;
+  }
+  
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2));
+    border-radius: 0 4px 4px 0;
+  }
+  
+  .competitor-card {
+    background: rgba(15, 15, 30, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.2s;
+    height: 100%;
+  }
+  
+  .competitor-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.1);
+  }
+  
+  .competitor-card.leader {
+    border-left: 3px solid var(--danger);
+  }
+  
+  .competitor-card.challenger {
+    border-left: 3px solid var(--warning);
+  }
+  
+  .competitor-card.niche {
+    border-left: 3px solid var(--info);
+  }
+  
+  .competitor-card.emerging {
+    border-left: 3px solid var(--success);
+  }
+  
+  .section-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+  }
+  
+  .btn-glass {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.6rem 1.25rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-glass:hover {
+    opacity: 0.9;
+    color: white;
+  }
+  
+  .btn-outline-glass {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  
+  .btn-outline-glass:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .table-glass {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .table-glass th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    text-align: left;
+  }
+  
+  .table-glass td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+  
+  .table-glass tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  
+  .threat-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    box-shadow: 0 0 8px currentColor;
+  }
+  
+  .position-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="text-white m-0" style="font-weight: 700;">Competition Analysis</h2>
+      <p class="mb-0" style="color: var(--text-secondary); font-size: 0.9rem;">
+        {% if summary %}
+          {{ summary.total_competitors }} tracked competitors · Market intensity: {{ summary.intensity }} · Generated {{ summary.generated_at }}
+        {% else %}
+          Competitive landscape and market positioning analysis
+        {% endif %}
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <form method="POST" action="{{ url_for('competition.refresh') }}" style="display:inline;">
+        <button type="submit" class="btn-glass">
+          <i class="fas fa-rotate"></i> Refresh Landscape
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if summary %}
+  <!-- Top Insight Banner -->
+  <div class="insight-banner mb-4">
+    <div class="d-flex align-items-start gap-3">
+      <i class="fas fa-chess-knight mt-1" style="color: var(--accent); font-size: 1.25rem;"></i>
+      <div>
+        <p class="mb-1" style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">
+          Market Position: <span class="badge-glass badge-purple">Rank #{{ summary.company_rank }}</span>
+          <span class="mx-2" style="color: var(--text-secondary);">|</span>
+          Intensity: <span class="badge-glass badge-{{ summary.intensity_color }}">{{ summary.intensity }}</span>
+          <span class="mx-2" style="color: var(--text-secondary);">|</span>
+          Your Share: <span class="badge-glass badge-info">{{ "{:.2f}%".format(summary.company_share) }}</span>
+        </p>
+        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+          {{ summary.intensity_desc }} {{ summary.position_advice }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Metrics -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Total Market (Est.)</div>
+        <div class="metric-value">{{ currency_symbol }}{{ "{:,.0f}".format(summary.total_market) }}</div>
+        <div class="metric-sub">Including fragmented players</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Your Revenue</div>
+        <div class="metric-value">{{ currency_symbol }}{{ "{:,.0f}".format(summary.company_revenue) }}</div>
+        <div class="metric-sub">{{ summary.company_employees }} employees</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Gap to Leader</div>
+        <div class="metric-value" style="color: {% if summary.gap_pct > 100 %}var(--danger){% elif summary.gap_pct > 20 %}var(--warning){% else %}var(--success){% endif %};">
+          {% if summary.revenue_gap > 0 %}+{% endif %}{{ currency_symbol }}{{ "{:,.0f}".format(summary.revenue_gap) }}
+        </div>
+        <div class="metric-sub">{{ "{:.1f}%".format(summary.gap_pct) }} revenue difference</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric-card">
+        <div class="metric-label">Avg. Competitor</div>
+        <div class="metric-value">{{ currency_symbol }}{{ "{:,.0f}".format(summary.avg_comp_revenue) }}</div>
+        <div class="metric-sub">{{ "{:.0f}".format(summary.avg_comp_employees) }} staff avg</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Threat Distribution -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="metric-label">High Threats</span>
+          <span class="badge-glass badge-danger">{{ summary.high_threats }}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width: {{ summary.high_threats / summary.total_competitors * 100 }}%; background: var(--danger);"></div>
+        </div>
+        <div class="metric-sub mt-2">Revenue >2x your size</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="metric-label">Medium Threats</span>
+          <span class="badge-glass badge-warning">{{ summary.medium_threats }}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width: {{ summary.medium_threats / summary.total_competitors * 100 }}%; background: var(--warning);"></div>
+        </div>
+        <div class="metric-sub mt-2">Revenue 0.8x–2x your size</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="metric-label">Low Threats</span>
+          <span class="badge-glass badge-success">{{ summary.low_threats }}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width: {{ summary.low_threats / summary.total_competitors * 100 }}%; background: var(--success);"></div>
+        </div>
+        <div class="metric-sub mt-2">Revenue <0.8x your size</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strategic Advice -->
+  <div class="glass-card p-4 mb-4">
+    <h5 class="section-title"><i class="fas fa-lightbulb me-2" style="color: var(--warning);"></i>Strategic Recommendations</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="insight-banner" style="border-left-color: var(--info); background: rgba(59, 130, 246, 0.05);">
+          <p class="mb-1" style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">
+            <i class="fas fa-crosshairs me-2" style="color: var(--info);"></i>Positioning
+          </p>
+          <p class="mb-0" style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">
+            {{ summary.position_advice }}
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="insight-banner" style="border-left-color: var(--warning); background: rgba(245, 158, 11, 0.05);">
+          <p class="mb-1" style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">
+            <i class="fas fa-shield-halved me-2" style="color: var(--warning);"></i>Threat Monitoring
+          </p>
+          <p class="mb-0" style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">
+            {{ summary.threat_advice }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Competitor Cards -->
+  <div class="glass-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h5 class="section-title m-0"><i class="fas fa-chess me-2" style="color: var(--accent);"></i>Competitor Profiles</h5>
+      <span class="badge-glass badge-info">{{ competitors|length }} tracked</span>
+    </div>
+    
+    <div class="row g-4">
+      {% for c in competitors %}
+      {% set card_class = 'emerging' %}
+      {% if c.market_position == 'Market Leader' %}{% set card_class = 'leader' %}
+      {% elif c.market_position == 'Challenger' %}{% set card_class = 'challenger' %}
+      {% elif c.market_position == 'Niche Player' %}{% set card_class = 'niche' %}{% endif %}
+      
+      <div class="col-md-6">
+        <div class="competitor-card {{ card_class }}">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h6 class="m-0" style="font-weight: 700; font-size: 1.05rem; color: var(--text-primary);">
+                {{ c.name }}
+              </h6>
+              <span class="position-badge mt-1 d-inline-block" style="
+                background: {% if c.market_position == 'Market Leader' %}rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3);{% elif c.market_position == 'Challenger' %}rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3);{% elif c.market_position == 'Niche Player' %}rgba(59,130,246,0.15); color: var(--info); border: 1px solid rgba(59,130,246,0.3);{% else %}rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3);{% endif %}">
+                {{ c.market_position }}
+              </span>
+            </div>
+            <span class="badge-glass {% if c.threat_level == 'high' %}badge-danger{% elif c.threat_level == 'medium' %}badge-warning{% else %}badge-success{% endif %}">
+              <span class="threat-indicator" style="background: currentColor; color: {% if c.threat_level == 'high' %}var(--danger){% elif c.threat_level == 'medium' %}var(--warning){% else %}var(--success){% endif %};"></span>
+              {{ c.threat_level|title }} Threat
+            </span>
+          </div>
+          
+          <!-- Market Share Bar -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">Market Share</span>
+              <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">{{ "%.1f"|format(c.market_share) }}%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: {{ c.market_share }}%; background: {% if c.market_share > 15 %}var(--danger){% elif c.market_share > 8 %}var(--warning){% else %}var(--success){% endif %};"></div>
+            </div>
+          </div>
+          
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <small style="color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">Est. Revenue</small>
+              <div style="font-weight: 700; color: var(--text-primary);">{{ currency_symbol }}{{ "{:,.0f}".format(c.revenue_estimate) if c.revenue_estimate else '-' }}</div>
+            </div>
+            <div class="col-6">
+              <small style="color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">Employees</small>
+              <div style="font-weight: 700; color: var(--text-primary);">{{ c.employee_count or '-' }}</div>
+            </div>
+          </div>
+          
+          {% if c.strengths %}
+          <div class="mb-2">
+            <small style="color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">
+              <i class="fas fa-bolt me-1" style="color: var(--success);"></i>Strengths
+            </small>
+            <p class="mb-0" style="font-size: 0.8rem; color: var(--text-primary); line-height: 1.4;">{{ c.strengths }}</p>
+          </div>
+          {% endif %}
+          
+          {% if c.weaknesses %}
+          <div class="mb-2">
+            <small style="color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">
+              <i class="fas fa-triangle-exclamation me-1" style="color: var(--danger);"></i>Weaknesses
+            </small>
+            <p class="mb-0" style="font-size: 0.8rem; color: var(--text-primary); line-height: 1.4;">{{ c.weaknesses }}</p>
+          </div>
+          {% endif %}
+          
+          {% if c.pricing_strategy %}
+          <div>
+            <small style="color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">
+              <i class="fas fa-tag me-1" style="color: var(--accent);"></i>Pricing Strategy
+            </small>
+            <span class="badge-glass badge-info" style="font-size: 0.7rem;">{{ c.pricing_strategy }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="glass-card p-4 mb-4">
+    <h5 class="section-title"><i class="fas fa-table me-2" style="color: var(--accent);"></i>Competitive Comparison</h5>
+    <div class="table-responsive">
+      <table class="table-glass">
+        <thead>
+          <tr>
+            <th>Competitor</th>
+            <th>Position</th>
+            <th>Threat</th>
+            <th class="text-end">Market Share</th>
+            <th class="text-end">Est. Revenue</th>
+            <th class="text-end">Employees</th>
+            <th>vs. You</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Your Company Row -->
+          <tr style="background: rgba(102, 126, 234, 0.05);">
+            <td style="font-weight: 700;">
+              <i class="fas fa-building me-2" style="color: var(--accent);"></i>
+              {{ summary.company_name if summary.company_name else 'Your Company' }}
+            </td>
+            <td><span class="badge-glass badge-purple" style="font-size: 0.7rem;">YOU</span></td>
+            <td>—</td>
+            <td class="text-end" style="font-weight: 700;">{{ "%.2f"|format(summary.company_share) }}%</td>
+            <td class="text-end" style="font-weight: 700;">{{ currency_symbol }}{{ "{:,.0f}".format(summary.company_revenue) }}</td>
+            <td class="text-end" style="font-weight: 700;">{{ summary.company_employees }}</td>
+            <td style="color: var(--text-secondary);">Baseline</td>
+          </tr>
+          
+          {% for c in competitors %}
+          {% set rev_diff = ((c.revenue_estimate or 0) - summary.company_revenue) / summary.company_revenue * 100 %}
+          <tr>
+            <td style="font-weight: 600;">{{ c.name }}</td>
+            <td>
+              <span class="badge-glass 
+                {% if c.market_position == 'Market Leader' %}badge-danger
+                {% elif c.market_position == 'Challenger' %}badge-warning
+                {% elif c.market_position == 'Niche Player' %}badge-info
+                {% else %}badge-success{% endif %}" style="font-size: 0.7rem;">
+                {{ c.market_position }}
+              </span>
+            </td>
+            <td>
+              <span class="badge-glass 
+                {% if c.threat_level == 'high' %}badge-danger
+                {% elif c.threat_level == 'medium' %}badge-warning
+                {% else %}badge-success{% endif %}" style="font-size: 0.7rem;">
+                {{ c.threat_level|title }}
+              </span>
+            </td>
+            <td class="text-end" style="font-weight: 600;">{{ "%.1f"|format(c.market_share) }}%</td>
+            <td class="text-end">{{ currency_symbol }}{{ "{:,.0f}".format(c.revenue_estimate) if c.revenue_estimate else '-' }}</td>
+            <td class="text-end">{{ c.employee_count or '-' }}</td>
+            <td style="font-weight: 600; color: {% if rev_diff > 0 %}var(--danger){% else %}var(--success){% endif %};">
+              {% if rev_diff > 0 %}+{% endif %}{{ "%.0f"|format(rev_diff) }}%
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-2" style="font-size: 0.75rem; color: var(--text-secondary);">
+      <i class="fas fa-circle-info me-1"></i>
+      "vs. You" shows revenue difference relative to your company. Positive = competitor is larger.
+    </div>
+  </div>
+  {% else %}
+  <!-- Empty State -->
+  <div class="glass-card p-4">
+    <div class="empty-state">
+      <i class="fas fa-chess mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+      <p class="mb-2" style="font-weight: 600; color: var(--text-primary);">No competitors tracked yet</p>
+      <p class="mb-3" style="font-size: 0.875rem;">Click the button below to generate a competitive landscape for your industry.</p>
+      <form method="POST" action="{{ url_for('competition.refresh') }}">
+        <button type="submit" class="btn-glass">
+          <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Competitor Analysis
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

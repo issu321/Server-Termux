@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Financial Modeling{% endblock %}
+{% block page_title %}Financial Modeling{% endblock %}
+{% block content %}
+<script>window.CURRENCY_SYMBOL = "{{ currency_symbol }}";</script>
+<div class="stats-grid mb-4">
+    <div class="glass-card glass-card-primary p-4"><div class="d-flex align-items-center gap-3"><i class="fas fa-money-bill-wave" style="color: var(--accent-primary); font-size: 24px;"></i><div><small style="color: var(--text-secondary);">30d Revenue</small><div style="font-size: 22px; font-weight: 700;">{{ currency_symbol }}{{ "{:,.0f}".format(summary.revenue_30d) }}</div></div></div></div>
+    <div class="glass-card glass-card-success p-4"><div class="d-flex align-items-center gap-3"><i class="fas fa-chart-line" style="color: #10B981; font-size: 24px;"></i><div><small style="color: var(--text-secondary);">30d Profit</small><div style="font-size: 22px; font-weight: 700;">{{ currency_symbol }}{{ "{:,.0f}".format(summary.profit_30d) }}</div></div></div></div>
+    <div class="glass-card glass-card-warning p-4"><div class="d-flex align-items-center gap-3"><i class="fas fa-percentage" style="color: #F59E0B; font-size: 24px;"></i><div><small style="color: var(--text-secondary);">Margin</small><div style="font-size: 22px; font-weight: 700;">{{ "%.1f"|format(summary.margin) }}%</div></div></div></div>
+</div>
+<div class="glass-card p-4">
+    <h5 class="mb-3" style="font-weight: 600;">Recent Transactions</h5>
+    {% if transactions %}
+    <table class="table-glass">
+        <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Description</th></tr></thead>
+        <tbody>
+        {% for t in transactions %}
+        <tr><td>{{ t.transaction_date }}</td><td><span class="badge-glass {% if t.transaction_type == 'revenue' %}badge-success{% else %}badge-warning{% endif %}">{{ t.transaction_type|title }}</span></td><td>{{ t.category or '-' }}</td><td style="font-weight: 600; color: {% if t.transaction_type == 'revenue' %}#10B981{% else %}#F472B6{% endif %};">{{ currency_symbol }}{{ "{:,.2f}".format(t.amount) }}</td><td>{{ t.description or '-' }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-center" style="color: var(--text-secondary);">No transactions recorded yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

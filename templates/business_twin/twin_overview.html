@@ -1,0 +1,986 @@
+{% extends "base.html" %}
+{% block title %}Business Twin{% endblock %}
+{% block page_title %}Digital Business Twin{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(0,212,255,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-coins" style="color: #00D4FF; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">Revenue</h5>
+            <a href="{{ url_for('business_twin.revenue') }}" class="btn btn-outline-glass btn-sm mt-2">View Twin</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(244,114,182,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-receipt" style="color: #F472B6; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">Expenses</h5>
+            <a href="{{ url_for('business_twin.expenses') }}" class="btn btn-outline-glass btn-sm mt-2">View Twin</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(139,92,246,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-users" style="color: #8B5CF6; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">Customers</h5>
+            <a href="{{ url_for('business_twin.customers') }}" class="btn btn-outline-glass btn-sm mt-2">View Twin</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-user-tie" style="color: #10B981; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">Employees</h5>
+            <a href="{{ url_for('business_twin.employees') }}" class="btn btn-outline-glass btn-sm mt-2">View Twin</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(245,158,11,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-truck" style="color: #F59E0B; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">Suppliers</h5>
+            <a href="{{ url_for('business_twin.suppliers') }}" class="btn btn-outline-glass btn-sm mt-2">View Twin</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(59,130,246,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-boxes" style="color: #3B82F6; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">Inventory</h5>
+            <a href="{{ url_for('business_twin.inventory') }}" class="btn btn-outline-glass btn-sm mt-2">View Twin</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(236,72,153,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-building" style="color: #EC4899; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">Departments</h5>
+            <a href="{{ url_for('business_twin.departments') }}" class="btn btn-outline-glass btn-sm mt-2">View Twin</a>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Twins Section -->
+<div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+    <h5 style="font-weight: 600;">Custom Twins</h5>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-glass btn-sm" data-bs-toggle="modal" data-bs-target="#quickCreateTwinModal">
+            <i class="fas fa-bolt me-1"></i>Quick Create
+        </button>
+        <a href="{{ url_for('custom_twin.list_custom_twins') }}" class="btn btn-outline-glass btn-sm">
+            <i class="fas fa-cog me-1"></i>Manage
+        </a>
+    </div>
+</div>
+<div class="row g-4 mb-4" id="customTwinsContainer">
+    {% for twin in custom_twins %}
+    <div class="col-md-3 col-sm-6 twin-card" data-twin-id="{{ twin.id }}">
+        <div class="glass-card p-4 text-center position-relative twin-card-hover">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: {{ twin.color }}20; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas {{ twin.icon }}" style="color: {{ twin.color }}; font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">{{ twin.name }}</h5>
+            <p class="text-muted mb-2" style="font-size: 12px; color: var(--text-secondary);">
+                {{ twin.records.count() }} records
+            </p>
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ url_for('custom_twin.view_custom_twin', slug=twin.slug) }}" class="btn btn-outline-glass btn-sm">
+                    <i class="fas fa-eye me-1"></i>View
+                </a>
+                <button class="btn btn-outline-glass btn-sm" onclick="editTwinFromOverview({{ twin.to_dict() | tojson }})" title="Edit">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <div class="col-md-3 col-sm-6">
+        <div class="glass-card p-4 text-center twin-card-add" style="border: 2px dashed var(--border-color); background: transparent; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#createTwinModal">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(0,212,255,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-plus" style="color: var(--accent-primary); font-size: 22px;"></i>
+            </div>
+            <h5 style="font-weight: 600;">Create New Twin</h5>
+            <p class="text-muted mb-0" style="font-size: 12px; color: var(--text-secondary);">Click to add a custom twin</p>
+        </div>
+    </div>
+</div>
+
+<!-- Create Twin Modal -->
+<div class="modal fade" id="createTwinModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-plus me-2" style="color: var(--accent-primary);"></i>Create New Custom Twin</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <!-- Template Selection -->
+                <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Choose a Template</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="template-card p-3 text-center" onclick="loadTemplate('assets')" style="border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-laptop" style="font-size: 24px; color: #3B82F6; margin-bottom: 8px;"></i>
+                            <h6 style="font-weight: 600; margin-bottom: 4px;">Assets</h6>
+                            <p style="font-size: 11px; color: var(--text-secondary); margin: 0;">Track company assets & equipment</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="template-card p-3 text-center" onclick="loadTemplate('projects')" style="border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-project-diagram" style="font-size: 24px; color: #8B5CF6; margin-bottom: 8px;"></i>
+                            <h6 style="font-weight: 600; margin-bottom: 4px;">Projects</h6>
+                            <p style="font-size: 11px; color: var(--text-secondary); margin: 0;">Manage projects & tasks</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="template-card p-3 text-center" onclick="loadTemplate('vehicles')" style="border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-car" style="font-size: 24px; color: #10B981; margin-bottom: 8px;"></i>
+                            <h6 style="font-weight: 600; margin-bottom: 4px;">Vehicles</h6>
+                            <p style="font-size: 11px; color: var(--text-secondary); margin: 0;">Fleet management</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="template-card p-3 text-center" onclick="loadTemplate('contracts')" style="border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-file-contract" style="font-size: 24px; color: #F59E0B; margin-bottom: 8px;"></i>
+                            <h6 style="font-weight: 600; margin-bottom: 4px;">Contracts</h6>
+                            <p style="font-size: 11px; color: var(--text-secondary); margin: 0;">Track agreements & contracts</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="template-card p-3 text-center" onclick="loadTemplate('leads')" style="border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-user-plus" style="font-size: 24px; color: #EC4899; margin-bottom: 8px;"></i>
+                            <h6 style="font-weight: 600; margin-bottom: 4px;">Leads</h6>
+                            <p style="font-size: 11px; color: var(--text-secondary); margin: 0;">Sales lead tracking</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="template-card p-3 text-center" onclick="loadTemplate('blank')" style="border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-cube" style="font-size: 24px; color: #00D4FF; margin-bottom: 8px;"></i>
+                            <h6 style="font-weight: 600; margin-bottom: 4px;">Blank</h6>
+                            <p style="font-size: 11px; color: var(--text-secondary); margin: 0;">Start from scratch</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="createTwinForm">
+                    <!-- Basic Info -->
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Basic Information</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Twin Name *</label>
+                            <input type="text" class="form-control-glass" name="name" id="twinName" required placeholder="e.g., Assets, Projects, Vehicles">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Icon</label>
+                            <select class="form-control-glass" name="icon" id="twinIcon">
+                                <option value="fa-cube">Cube (Default)</option>
+                                <option value="fa-box">Box</option>
+                                <option value="fa-cubes">Cubes</option>
+                                <option value="fa-database">Database</option>
+                                <option value="fa-folder">Folder</option>
+                                <option value="fa-file-alt">File</option>
+                                <option value="fa-list">List</option>
+                                <option value="fa-table">Table</option>
+                                <option value="fa-chart-bar">Chart</option>
+                                <option value="fa-chart-pie">Pie Chart</option>
+                                <option value="fa-car">Car</option>
+                                <option value="fa-building">Building</option>
+                                <option value="fa-laptop">Laptop</option>
+                                <option value="fa-mobile-alt">Mobile</option>
+                                <option value="fa-tools">Tools</option>
+                                <option value="fa-cog">Cog</option>
+                                <option value="fa-tag">Tag</option>
+                                <option value="fa-tags">Tags</option>
+                                <option value="fa-user">User</option>
+                                <option value="fa-users">Users</option>
+                                <option value="fa-calendar">Calendar</option>
+                                <option value="fa-clock">Clock</option>
+                                <option value="fa-dollar-sign">Dollar</option>
+                                <option value="fa-euro-sign">Euro</option>
+                                <option value="fa-pound-sign">Pound</option>
+                                <option value="fa-rupee-sign">Rupee</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Theme Color</label>
+                            <input type="color" class="form-control-glass" name="color" id="twinColor" value="#00D4FF" style="height: 40px; padding: 4px;">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Description</label>
+                            <textarea class="form-control-glass" name="description" id="twinDescription" rows="2" placeholder="Describe what this twin will track..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Field Definitions -->
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Field Definitions</h6>
+                    <p class="text-muted mb-3" style="font-size: 12px; color: var(--text-secondary);">Define the fields for your twin. The first field will be used as the unique identifier.</p>
+                    <div id="fieldsContainer">
+                        <!-- Fields will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-outline-glass mb-4" onclick="addField()">
+                        <i class="fas fa-plus me-2"></i>Add Field
+                    </button>
+
+                    <!-- Stats Configuration -->
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Statistics Cards</h6>
+                    <p class="text-muted mb-3" style="font-size: 12px; color: var(--text-secondary);">Configure statistics to display at the top of your twin page.</p>
+                    <div id="statsContainer">
+                        <!-- Stats will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-outline-glass" onclick="addStat()">
+                        <i class="fas fa-plus me-2"></i>Add Stat
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitCreateTwin()">
+                    <i class="fas fa-save me-2"></i>Create Twin
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Create Modal -->
+<div class="modal fade" id="quickCreateTwinModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-bolt me-2" style="color: #F59E0B;"></i>Quick Create Twin</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <form id="quickCreateTwinForm">
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Twin Name *</label>
+                        <input type="text" class="form-control-glass" name="name" id="quickTwinName" required placeholder="e.g., Assets, Projects">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Template</label>
+                        <select class="form-control-glass" id="quickTemplate" onchange="applyQuickTemplate()">
+                            <option value="">-- Select Template --</option>
+                            <option value="assets">Assets (IT Equipment)</option>
+                            <option value="projects">Projects</option>
+                            <option value="vehicles">Vehicles</option>
+                            <option value="contracts">Contracts</option>
+                            <option value="leads">Sales Leads</option>
+                            <option value="blank">Blank (Custom)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Description</label>
+                        <textarea class="form-control-glass" name="description" id="quickTwinDescription" rows="2" placeholder="Optional description..."></textarea>
+                    </div>
+                    <input type="hidden" name="icon" id="quickTwinIcon" value="fa-cube">
+                    <input type="hidden" name="color" id="quickTwinColor" value="#00D4FF">
+                    <input type="hidden" name="field_count" id="quickFieldCount" value="0">
+                    <input type="hidden" name="stat_count" id="quickStatCount" value="0">
+                    <div id="quickFieldsContainer"></div>
+                    <div id="quickStatsContainer"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitQuickCreateTwin()">
+                    <i class="fas fa-bolt me-2"></i>Create Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Twin Modal -->
+<div class="modal fade" id="editTwinModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); color: var(--text-primary);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 24px;">
+                <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-pencil-alt me-2" style="color: var(--accent-primary);"></i>Edit Custom Twin</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <form id="editTwinForm">
+                    <input type="hidden" id="editTwinId" name="twin_id">
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Basic Information</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Twin Name *</label>
+                            <input type="text" class="form-control-glass" id="editName" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Icon</label>
+                            <select class="form-control-glass" id="editIcon" name="icon">
+                                <option value="fa-cube">Cube (Default)</option>
+                                <option value="fa-box">Box</option>
+                                <option value="fa-cubes">Cubes</option>
+                                <option value="fa-database">Database</option>
+                                <option value="fa-folder">Folder</option>
+                                <option value="fa-file-alt">File</option>
+                                <option value="fa-list">List</option>
+                                <option value="fa-table">Table</option>
+                                <option value="fa-chart-bar">Chart</option>
+                                <option value="fa-chart-pie">Pie Chart</option>
+                                <option value="fa-car">Car</option>
+                                <option value="fa-building">Building</option>
+                                <option value="fa-laptop">Laptop</option>
+                                <option value="fa-mobile-alt">Mobile</option>
+                                <option value="fa-tools">Tools</option>
+                                <option value="fa-cog">Cog</option>
+                                <option value="fa-tag">Tag</option>
+                                <option value="fa-tags">Tags</option>
+                                <option value="fa-user">User</option>
+                                <option value="fa-users">Users</option>
+                                <option value="fa-calendar">Calendar</option>
+                                <option value="fa-clock">Clock</option>
+                                <option value="fa-dollar-sign">Dollar</option>
+                                <option value="fa-euro-sign">Euro</option>
+                                <option value="fa-pound-sign">Pound</option>
+                                <option value="fa-rupee-sign">Rupee</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Theme Color</label>
+                            <input type="color" class="form-control-glass" id="editColor" name="color" style="height: 40px; padding: 4px;">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Description</label>
+                            <textarea class="form-control-glass" id="editDescription" name="description" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Field Definitions</h6>
+                    <div id="editFieldsContainer"></div>
+                    <button type="button" class="btn btn-outline-glass mb-4" onclick="addEditField()">
+                        <i class="fas fa-plus me-2"></i>Add Field
+                    </button>
+
+                    <h6 class="mb-3" style="color: var(--accent-primary); font-weight: 600;">Statistics Cards</h6>
+                    <div id="editStatsContainer"></div>
+                    <button type="button" class="btn btn-outline-glass" onclick="addEditStat()">
+                        <i class="fas fa-plus me-2"></i>Add Stat
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 16px 24px;">
+                <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-glass" onclick="submitEditTwin()">
+                    <i class="fas fa-save me-2"></i>Update Twin
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Business Summary Section -->
+<div class="glass-card p-4 mt-4">
+    <h5 class="mb-3" style="font-weight: 600;">Business Summary</h5>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <table class="table-glass">
+                <tr><td style="color: var(--text-secondary);">Company</td><td class="text-end" style="font-weight: 500;">{{ company.company_name if company else 'Not Set' }}</td></tr>
+                <tr><td style="color: var(--text-secondary);">Industry</td><td class="text-end" style="font-weight: 500;">{{ company.industry if company else 'Not Set' }}</td></tr>
+                <tr><td style="color: var(--text-secondary);">Type</td><td class="text-end" style="font-weight: 500;">{{ company.business_type if company else 'Not Set' }}</td></tr>
+                <tr><td style="color: var(--text-secondary);">Size</td><td class="text-end" style="font-weight: 500;">{{ company.company_size if company else 'Not Set' }}</td></tr>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <table class="table-glass">
+                <tr><td style="color: var(--text-secondary);">Employees</td><td class="text-end" style="font-weight: 500;">{{ employees }}</td></tr>
+                <tr><td style="color: var(--text-secondary);">Customers</td><td class="text-end" style="font-weight: 500;">{{ customers }}</td></tr>
+                <tr><td style="color: var(--text-secondary);">Suppliers</td><td class="text-end" style="font-weight: 500;">{{ suppliers }}</td></tr>
+                <tr><td style="color: var(--text-secondary);">Departments</td><td class="text-end" style="font-weight: 500;">{{ departments|length }}</td></tr>
+                <tr><td style="color: var(--text-secondary);">SKUs</td><td class="text-end" style="font-weight: 500;">{{ inventory_items }}</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Templates configuration
+const twinTemplates = {
+    assets: {
+        name: 'Assets',
+        icon: 'fa-laptop',
+        color: '#3B82F6',
+        description: 'Track company assets and equipment',
+        fields: [
+            { name: 'asset_id', label: 'Asset ID', type: 'text', required: true, default: '' },
+            { name: 'asset_name', label: 'Asset Name', type: 'text', required: true, default: '' },
+            { name: 'category', label: 'Category', type: 'text', required: false, default: '' },
+            { name: 'purchase_date', label: 'Purchase Date', type: 'date', required: false, default: '' },
+            { name: 'purchase_cost', label: 'Purchase Cost', type: 'number', required: false, default: '0' },
+            { name: 'current_value', label: 'Current Value', type: 'number', required: false, default: '0' },
+            { name: 'location', label: 'Location', type: 'text', required: false, default: '' },
+            { name: 'assigned_to', label: 'Assigned To', type: 'text', required: false, default: '' },
+            { name: 'status', label: 'Status', type: 'text', required: false, default: 'Active' }
+        ],
+        stats: [
+            { name: 'total_assets', label: 'Total Assets', type: 'count', field: '', color: '#3B82F6' },
+            { name: 'total_value', label: 'Total Value', type: 'sum', field: 'current_value', color: '#10B981' },
+            { name: 'active_count', label: 'Active', type: 'count', field: '', color: '#00D4FF' }
+        ]
+    },
+    projects: {
+        name: 'Projects',
+        icon: 'fa-project-diagram',
+        color: '#8B5CF6',
+        description: 'Manage projects and tasks',
+        fields: [
+            { name: 'project_id', label: 'Project ID', type: 'text', required: true, default: '' },
+            { name: 'project_name', label: 'Project Name', type: 'text', required: true, default: '' },
+            { name: 'client', label: 'Client', type: 'text', required: false, default: '' },
+            { name: 'start_date', label: 'Start Date', type: 'date', required: false, default: '' },
+            { name: 'end_date', label: 'End Date', type: 'date', required: false, default: '' },
+            { name: 'budget', label: 'Budget', type: 'number', required: false, default: '0' },
+            { name: 'spent', label: 'Spent', type: 'number', required: false, default: '0' },
+            { name: 'status', label: 'Status', type: 'text', required: false, default: 'Planning' },
+            { name: 'priority', label: 'Priority', type: 'text', required: false, default: 'Medium' }
+        ],
+        stats: [
+            { name: 'total_projects', label: 'Total Projects', type: 'count', field: '', color: '#8B5CF6' },
+            { name: 'total_budget', label: 'Total Budget', type: 'sum', field: 'budget', color: '#10B981' },
+            { name: 'active_projects', label: 'Active', type: 'count', field: '', color: '#00D4FF' }
+        ]
+    },
+    vehicles: {
+        name: 'Vehicles',
+        icon: 'fa-car',
+        color: '#10B981',
+        description: 'Fleet management',
+        fields: [
+            { name: 'vehicle_id', label: 'Vehicle ID', type: 'text', required: true, default: '' },
+            { name: 'make_model', label: 'Make & Model', type: 'text', required: true, default: '' },
+            { name: 'year', label: 'Year', type: 'integer', required: false, default: '' },
+            { name: 'license_plate', label: 'License Plate', type: 'text', required: false, default: '' },
+            { name: 'vin', label: 'VIN', type: 'text', required: false, default: '' },
+            { name: 'purchase_date', label: 'Purchase Date', type: 'date', required: false, default: '' },
+            { name: 'mileage', label: 'Mileage', type: 'integer', required: false, default: '0' },
+            { name: 'assigned_driver', label: 'Assigned Driver', type: 'text', required: false, default: '' },
+            { name: 'status', label: 'Status', type: 'text', required: false, default: 'Active' }
+        ],
+        stats: [
+            { name: 'total_vehicles', label: 'Total Vehicles', type: 'count', field: '', color: '#10B981' },
+            { name: 'total_mileage', label: 'Total Mileage', type: 'sum', field: 'mileage', color: '#F59E0B' },
+            { name: 'active_vehicles', label: 'Active', type: 'count', field: '', color: '#00D4FF' }
+        ]
+    },
+    contracts: {
+        name: 'Contracts',
+        icon: 'fa-file-contract',
+        color: '#F59E0B',
+        description: 'Track agreements and contracts',
+        fields: [
+            { name: 'contract_id', label: 'Contract ID', type: 'text', required: true, default: '' },
+            { name: 'contract_name', label: 'Contract Name', type: 'text', required: true, default: '' },
+            { name: 'vendor', label: 'Vendor/Client', type: 'text', required: false, default: '' },
+            { name: 'start_date', label: 'Start Date', type: 'date', required: false, default: '' },
+            { name: 'end_date', label: 'End Date', type: 'date', required: false, default: '' },
+            { name: 'value', label: 'Contract Value', type: 'number', required: false, default: '0' },
+            { name: 'type', label: 'Contract Type', type: 'text', required: false, default: '' },
+            { name: 'renewal_date', label: 'Renewal Date', type: 'date', required: false, default: '' },
+            { name: 'status', label: 'Status', type: 'text', required: false, default: 'Active' }
+        ],
+        stats: [
+            { name: 'total_contracts', label: 'Total Contracts', type: 'count', field: '', color: '#F59E0B' },
+            { name: 'total_value', label: 'Total Value', type: 'sum', field: 'value', color: '#10B981' },
+            { name: 'expiring_soon', label: 'Expiring Soon', type: 'count', field: '', color: '#EF4444' }
+        ]
+    },
+    leads: {
+        name: 'Leads',
+        icon: 'fa-user-plus',
+        color: '#EC4899',
+        description: 'Sales lead tracking',
+        fields: [
+            { name: 'lead_id', label: 'Lead ID', type: 'text', required: true, default: '' },
+            { name: 'contact_name', label: 'Contact Name', type: 'text', required: true, default: '' },
+            { name: 'company', label: 'Company', type: 'text', required: false, default: '' },
+            { name: 'email', label: 'Email', type: 'email', required: false, default: '' },
+            { name: 'phone', label: 'Phone', type: 'text', required: false, default: '' },
+            { name: 'source', label: 'Source', type: 'text', required: false, default: '' },
+            { name: 'estimated_value', label: 'Est. Value', type: 'number', required: false, default: '0' },
+            { name: 'probability', label: 'Probability %', type: 'integer', required: false, default: '0' },
+            { name: 'status', label: 'Status', type: 'text', required: false, default: 'New' }
+        ],
+        stats: [
+            { name: 'total_leads', label: 'Total Leads', type: 'count', field: '', color: '#EC4899' },
+            { name: 'total_value', label: 'Pipeline Value', type: 'sum', field: 'estimated_value', color: '#10B981' },
+            { name: 'qualified', label: 'Qualified', type: 'count', field: '', color: '#00D4FF' }
+        ]
+    },
+    blank: {
+        name: '',
+        icon: 'fa-cube',
+        color: '#00D4FF',
+        description: '',
+        fields: [
+            { name: 'id', label: 'ID', type: 'text', required: true, default: '' },
+            { name: 'name', label: 'Name', type: 'text', required: true, default: '' }
+        ],
+        stats: [
+            { name: 'total_count', label: 'Total Count', type: 'count', field: '', color: '#00D4FF' }
+        ]
+    }
+};
+
+let fieldCount = 0;
+let statCount = 0;
+let editFieldCount = 0;
+let editStatCount = 0;
+
+function loadTemplate(templateKey) {
+    const template = twinTemplates[templateKey];
+    if (!template) return;
+
+    // Fill basic info
+    document.getElementById('twinName').value = template.name;
+    document.getElementById('twinIcon').value = template.icon;
+    document.getElementById('twinColor').value = template.color;
+    document.getElementById('twinDescription').value = template.description;
+
+    // Clear and populate fields
+    document.getElementById('fieldsContainer').innerHTML = '';
+    fieldCount = 0;
+    template.fields.forEach(field => addField(field));
+
+    // Clear and populate stats
+    document.getElementById('statsContainer').innerHTML = '';
+    statCount = 0;
+    template.stats.forEach(stat => addStat(stat));
+
+    // Highlight selected template
+    document.querySelectorAll('.template-card').forEach(card => {
+        card.style.borderColor = 'var(--border-color)';
+        card.style.background = 'transparent';
+    });
+    event.currentTarget.style.borderColor = template.color;
+    event.currentTarget.style.background = template.color + '10';
+}
+
+function addField(field = null) {
+    const container = document.getElementById('fieldsContainer');
+    const html = `
+        <div class="row g-3 mb-3 field-row" data-index="${fieldCount}">
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="field_name_${fieldCount}" placeholder="Field name (e.g., asset_id)" value="${field ? field.name : ''}" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="field_label_${fieldCount}" placeholder="Display label (e.g., Asset ID)" value="${field ? field.label : ''}" required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control-glass" name="field_type_${fieldCount}">
+                    <option value="text" ${field && field.type === 'text' ? 'selected' : ''}>Text</option>
+                    <option value="number" ${field && field.type === 'number' ? 'selected' : ''}>Number</option>
+                    <option value="integer" ${field && field.type === 'integer' ? 'selected' : ''}>Integer</option>
+                    <option value="boolean" ${field && field.type === 'boolean' ? 'selected' : ''}>Boolean</option>
+                    <option value="date" ${field && field.type === 'date' ? 'selected' : ''}>Date</option>
+                    <option value="email" ${field && field.type === 'email' ? 'selected' : ''}>Email</option>
+                    <option value="url" ${field && field.type === 'url' ? 'selected' : ''}>URL</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control-glass" name="field_default_${fieldCount}" placeholder="Default value" value="${field ? field.default : ''}">
+            </div>
+            <div class="col-md-1">
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="field_required_${fieldCount}" id="req_${fieldCount}" ${field && field.required ? 'checked' : ''}>
+                    <label class="form-check-label" for="req_${fieldCount}" style="font-size: 11px;">Req</label>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.field-row').remove()" style="border-color: #EF4444; color: #EF4444;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    fieldCount++;
+}
+
+function addStat(stat = null) {
+    const container = document.getElementById('statsContainer');
+    const html = `
+        <div class="row g-3 mb-3 stat-row" data-index="${statCount}">
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="stat_name_${statCount}" placeholder="Stat name (e.g., total_count)" value="${stat ? stat.name : ''}" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="stat_label_${statCount}" placeholder="Display label (e.g., Total Count)" value="${stat ? stat.label : ''}" required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control-glass" name="stat_type_${statCount}">
+                    <option value="count" ${stat && stat.type === 'count' ? 'selected' : ''}>Count</option>
+                    <option value="sum" ${stat && stat.type === 'sum' ? 'selected' : ''}>Sum</option>
+                    <option value="avg" ${stat && stat.type === 'avg' ? 'selected' : ''}>Average</option>
+                    <option value="min" ${stat && stat.type === 'min' ? 'selected' : ''}>Minimum</option>
+                    <option value="max" ${stat && stat.type === 'max' ? 'selected' : ''}>Maximum</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control-glass" name="stat_field_${statCount}" placeholder="Field (for sum/avg)" value="${stat ? stat.field : ''}">
+            </div>
+            <div class="col-md-1">
+                <input type="color" class="form-control-glass" name="stat_color_${statCount}" value="${stat ? stat.color : '#00D4FF'}" style="height: 38px; padding: 2px;">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.stat-row').remove()" style="border-color: #EF4444; color: #EF4444;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    statCount++;
+}
+
+function submitCreateTwin() {
+    const form = document.getElementById('createTwinForm');
+    const formData = new FormData(form);
+
+    // Add counts
+    formData.append('field_count', fieldCount);
+    formData.append('stat_count', statCount);
+
+    fetch('{{ url_for("custom_twin.create_custom_twin") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error creating twin', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+// Quick Create Functions
+function applyQuickTemplate() {
+    const templateKey = document.getElementById('quickTemplate').value;
+    if (!templateKey) return;
+
+    const template = twinTemplates[templateKey];
+    if (!template) return;
+
+    document.getElementById('quickTwinName').value = template.name;
+    document.getElementById('quickTwinIcon').value = template.icon;
+    document.getElementById('quickTwinColor').value = template.color;
+    document.getElementById('quickTwinDescription').value = template.description;
+
+    // Store fields and stats in hidden inputs
+    const fieldsContainer = document.getElementById('quickFieldsContainer');
+    const statsContainer = document.getElementById('quickStatsContainer');
+    fieldsContainer.innerHTML = '';
+    statsContainer.innerHTML = '';
+
+    template.fields.forEach((field, index) => {
+        fieldsContainer.innerHTML += `
+            <input type="hidden" name="field_name_${index}" value="${field.name}">
+            <input type="hidden" name="field_label_${index}" value="${field.label}">
+            <input type="hidden" name="field_type_${index}" value="${field.type}">
+            <input type="hidden" name="field_required_${index}" value="${field.required ? 'on' : ''}">
+            <input type="hidden" name="field_default_${index}" value="${field.default}">
+        `;
+    });
+
+    template.stats.forEach((stat, index) => {
+        statsContainer.innerHTML += `
+            <input type="hidden" name="stat_name_${index}" value="${stat.name}">
+            <input type="hidden" name="stat_label_${index}" value="${stat.label}">
+            <input type="hidden" name="stat_type_${index}" value="${stat.type}">
+            <input type="hidden" name="stat_field_${index}" value="${stat.field}">
+            <input type="hidden" name="stat_color_${index}" value="${stat.color}">
+        `;
+    });
+
+    document.getElementById('quickFieldCount').value = template.fields.length;
+    document.getElementById('quickStatCount').value = template.stats.length;
+}
+
+function submitQuickCreateTwin() {
+    const form = document.getElementById('quickCreateTwinForm');
+    const formData = new FormData(form);
+
+    fetch('{{ url_for("custom_twin.create_custom_twin") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error creating twin', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+// Edit Functions
+function editTwinFromOverview(twin) {
+    document.getElementById('editTwinId').value = twin.id;
+    document.getElementById('editName').value = twin.name;
+    document.getElementById('editIcon').value = twin.icon;
+    document.getElementById('editColor').value = twin.color;
+    document.getElementById('editDescription').value = twin.description || '';
+
+    // Clear and populate fields
+    document.getElementById('editFieldsContainer').innerHTML = '';
+    editFieldCount = 0;
+    if (twin.field_definitions) {
+        twin.field_definitions.forEach(field => addEditField(field));
+    }
+
+    // Clear and populate stats
+    document.getElementById('editStatsContainer').innerHTML = '';
+    editStatCount = 0;
+    if (twin.stats_config) {
+        twin.stats_config.forEach(stat => addEditStat(stat));
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('editTwinModal'));
+    modal.show();
+}
+
+function addEditField(field = null) {
+    const container = document.getElementById('editFieldsContainer');
+    const index = editFieldCount;
+    const html = `
+        <div class="row g-3 mb-3 field-row" data-index="${index}">
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="field_name_${index}" placeholder="Field name" value="${field ? field.name : ''}" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="field_label_${index}" placeholder="Display label" value="${field ? field.label : ''}" required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control-glass" name="field_type_${index}">
+                    <option value="text" ${field && field.type === 'text' ? 'selected' : ''}>Text</option>
+                    <option value="number" ${field && field.type === 'number' ? 'selected' : ''}>Number</option>
+                    <option value="integer" ${field && field.type === 'integer' ? 'selected' : ''}>Integer</option>
+                    <option value="boolean" ${field && field.type === 'boolean' ? 'selected' : ''}>Boolean</option>
+                    <option value="date" ${field && field.type === 'date' ? 'selected' : ''}>Date</option>
+                    <option value="email" ${field && field.type === 'email' ? 'selected' : ''}>Email</option>
+                    <option value="url" ${field && field.type === 'url' ? 'selected' : ''}>URL</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control-glass" name="field_default_${index}" placeholder="Default value" value="${field ? field.default : ''}">
+            </div>
+            <div class="col-md-1">
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="field_required_${index}" id="edit_req_${index}" ${field && field.required ? 'checked' : ''}>
+                    <label class="form-check-label" for="edit_req_${index}" style="font-size: 11px;">Req</label>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.field-row').remove()" style="border-color: #EF4444; color: #EF4444;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    editFieldCount++;
+}
+
+function addEditStat(stat = null) {
+    const container = document.getElementById('editStatsContainer');
+    const index = editStatCount;
+    const html = `
+        <div class="row g-3 mb-3 stat-row" data-index="${index}">
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="stat_name_${index}" placeholder="Stat name" value="${stat ? stat.name : ''}" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control-glass" name="stat_label_${index}" placeholder="Display label" value="${stat ? stat.label : ''}" required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control-glass" name="stat_type_${index}">
+                    <option value="count" ${stat && stat.type === 'count' ? 'selected' : ''}>Count</option>
+                    <option value="sum" ${stat && stat.type === 'sum' ? 'selected' : ''}>Sum</option>
+                    <option value="avg" ${stat && stat.type === 'avg' ? 'selected' : ''}>Average</option>
+                    <option value="min" ${stat && stat.type === 'min' ? 'selected' : ''}>Minimum</option>
+                    <option value="max" ${stat && stat.type === 'max' ? 'selected' : ''}>Maximum</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control-glass" name="stat_field_${index}" placeholder="Field" value="${stat ? stat.field : ''}">
+            </div>
+            <div class="col-md-1">
+                <input type="color" class="form-control-glass" name="stat_color_${index}" value="${stat ? stat.color : '#00D4FF'}" style="height: 38px; padding: 2px;">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.stat-row').remove()" style="border-color: #EF4444; color: #EF4444;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    editStatCount++;
+}
+
+function submitEditTwin() {
+    const form = document.getElementById('editTwinForm');
+    const formData = new FormData(form);
+    const twinId = document.getElementById('editTwinId').value;
+
+    // Add counts
+    formData.append('field_count', editFieldCount);
+    formData.append('stat_count', editStatCount);
+
+    fetch(`/business-twin/custom-twins/${twinId}/edit`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Error updating twin', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Network error: ' + err.message, 'error');
+    });
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        padding: 12px 24px; border-radius: 8px; font-weight: 500;
+        background: ${type === 'success' ? 'rgba(16,185,129,0.9)' : 'rgba(239,68,68,0.9)'};
+        color: white; backdrop-filter: blur(10px);
+        animation: slideIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// Initialize
+addField();
+addStat();
+</script>
+<style>
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.modal-backdrop-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.modal.show .modal-backdrop-custom,
+.modal.fade.show .modal-backdrop-custom {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-dialog {
+    z-index: 1050;
+    position: relative;
+}
+
+.modal-backdrop {
+    display: none !important;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+.form-label {
+    margin-bottom: 6px;
+    display: block;
+}
+
+.modal-content .form-control-glass {
+    background: rgba(255,255,255,0.05);
+}
+
+.modal-content .form-control-glass:focus {
+    background: rgba(255,255,255,0.08);
+}
+
+.template-card {
+    transition: all 0.2s ease;
+}
+
+.template-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.twin-card-hover {
+    transition: all 0.2s ease;
+}
+
+.twin-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.twin-card-add {
+    transition: all 0.2s ease;
+}
+
+.twin-card-add:hover {
+    border-color: var(--accent-primary) !important;
+    background: rgba(0,212,255,0.05) !important;
+}
+
+@media (max-width: 768px) {
+    .template-card {
+        margin-bottom: 12px;
+    }
+}
+</style>
+{% endblock %}
